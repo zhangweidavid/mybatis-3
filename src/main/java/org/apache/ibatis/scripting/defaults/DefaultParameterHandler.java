@@ -21,6 +21,8 @@ import java.util.List;
 
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ParameterMapping;
@@ -37,6 +39,8 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Eduardo Macarron
  */
 public class DefaultParameterHandler implements ParameterHandler {
+
+  private static final Log log= LogFactory.getLog(DefaultParameterHandler.class);
 
   private final TypeHandlerRegistry typeHandlerRegistry;
 
@@ -60,6 +64,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 
   @Override
   public void setParameters(PreparedStatement ps) {
+    log.trace(" setParameters  ps="+ps+", parameterObject="+parameterObject);
     ErrorContext.instance().activity("setting parameters").object(mappedStatement.getParameterMap().getId());
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings != null) {

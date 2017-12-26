@@ -73,7 +73,9 @@ public class MapWrapper extends BaseWrapper {
 
   @Override
   public Class<?> getSetterType(String name) {
+    //创建属性分割器
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    //如果属性有子属性
     if (prop.hasNext()) {
       MetaObject metaValue = metaObject.metaObjectForProperty(prop.getIndexedName());
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {

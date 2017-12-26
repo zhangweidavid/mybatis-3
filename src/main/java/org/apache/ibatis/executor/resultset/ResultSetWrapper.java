@@ -39,9 +39,11 @@ import org.apache.ibatis.type.UnknownTypeHandler;
  * @author Iwao AVE!
  */
 public class ResultSetWrapper {
-
+  //ResultSet
   private final ResultSet resultSet;
+  //类型处理器注册器
   private final TypeHandlerRegistry typeHandlerRegistry;
+  //列名
   private final List<String> columnNames = new ArrayList<String>();
   private final List<String> classNames = new ArrayList<String>();
   private final List<JdbcType> jdbcTypes = new ArrayList<JdbcType>();
@@ -53,11 +55,17 @@ public class ResultSetWrapper {
     super();
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     this.resultSet = rs;
+    //从RS中获取元数据
     final ResultSetMetaData metaData = rs.getMetaData();
+    //从元数据获取列的数量
     final int columnCount = metaData.getColumnCount();
+    //遍历所有列
     for (int i = 1; i <= columnCount; i++) {
+      //如果配置列允许使用标题就获取列的标题，否则就获取列名
       columnNames.add(configuration.isUseColumnLabel() ? metaData.getColumnLabel(i) : metaData.getColumnName(i));
+      //从元数据的列字段类型映射到java 类型
       jdbcTypes.add(JdbcType.forCode(metaData.getColumnType(i)));
+      //返回列的类全称
       classNames.add(metaData.getColumnClassName(i));
     }
   }

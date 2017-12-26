@@ -28,14 +28,13 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
 /**
- * Provides a very simple API for accessing resources within an application server.
- * 
+ * 提供用来访问服务器上资源的一个简单API
  * @author Ben Gunter
  */
 public abstract class VFS {
   private static final Log log = LogFactory.getLog(VFS.class);
 
-  /** The built-in implementations. */
+  /** 内置实现 JBoss6VFS,DefaultVFS. */
   public static final Class<?>[] IMPLEMENTATIONS = { JBoss6VFS.class, DefaultVFS.class };
 
   /** The list to which implementations are added by {@link #addImplClass(Class)}. */

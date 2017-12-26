@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2015 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ public class TypeAliasRegistry {
       if (string == null) {
         return null;
       }
-      // issue #748
+      //转换为小写
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
       if (TYPE_ALIASES.containsKey(key)) {

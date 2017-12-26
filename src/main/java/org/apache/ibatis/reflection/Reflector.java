@@ -15,6 +15,9 @@
  */
 package org.apache.ibatis.reflection;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -41,27 +44,33 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
 /**
  * This class represents a cached set of class definition information that
  * allows for easy mapping between property names and getter/setter methods.
- *
+ * 这个类表示一组可缓存的类定义信息允许在属性名称和getter / setter方法之间轻松映射。
  * @author Clinton Begin
  */
 public class Reflector {
-
+  //类
   private final Class<?> type;
+  //可读的属性
   private final String[] readablePropertyNames;
+  //可写的属性
   private final String[] writeablePropertyNames;
+  //写方法
   private final Map<String, Invoker> setMethods = new HashMap<String, Invoker>();
+  //读方法
   private final Map<String, Invoker> getMethods = new HashMap<String, Invoker>();
+  //写方法参数类型
   private final Map<String, Class<?>> setTypes = new HashMap<String, Class<?>>();
+  //读方法，返回类型
   private final Map<String, Class<?>> getTypes = new HashMap<String, Class<?>>();
+  //默认构造方法
   private Constructor<?> defaultConstructor;
-
+  //
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<String, String>();
 
   public Reflector(Class<?> clazz) {
     type = clazz;
     addDefaultConstructor(clazz);
-    addGetMethods(clazz);
-    addSetMethods(clazz);
+    addGetterAndSetterMethods(clazz);
     addFields(clazz);
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
     writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
@@ -91,21 +100,24 @@ public class Reflector {
     }
   }
 
-  private void addGetMethods(Class<?> cls) {
-    Map<String, List<Method>> conflictingGetters = new HashMap<String, List<Method>>();
-    Method[] methods = getClassMethods(cls);
-    for (Method method : methods) {
-      if (method.getParameterTypes().length > 0) {
-        continue;
+  private void addGetterAndSetterMethods(Class<?> cls)  {
+    try {
+      Map<String, List<Method>> conflictingGetters = new HashMap<String, List<Method>>();
+      Map<String, List<Method>> conflictingSetters = new HashMap<String, List<Method>>();
+      PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(cls).getPropertyDescriptors();
+
+      for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+
+        String name = propertyDescriptor.getName();
+        addMethodConflict(conflictingGetters, name, propertyDescriptor.getReadMethod());
+        addMethodConflict(conflictingSetters,name,propertyDescriptor.getWriteMethod());
+
       }
-      String name = method.getName();
-      if ((name.startsWith("get") && name.length() > 3)
-          || (name.startsWith("is") && name.length() > 2)) {
-        name = PropertyNamer.methodToProperty(name);
-        addMethodConflict(conflictingGetters, name, method);
-      }
+      resolveGetterConflicts(conflictingGetters);
+      resolveSetterConflicts(conflictingSetters);
+    }catch (Exception e){
+
     }
-    resolveGetterConflicts(conflictingGetters);
   }
 
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {

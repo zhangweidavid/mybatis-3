@@ -15,8 +15,7 @@
        limitations under the License.
 
 -->
-<employee id="${id_var}">
-  <blah something="that"/>
+<employee id="${id_var}"><blah something="that"/>
   <first_name>Jim</first_name>
   <last_name>Smith</last_name>
   <birth_date>

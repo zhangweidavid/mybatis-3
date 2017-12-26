@@ -54,6 +54,7 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private final XPathParser parser;
   private final MapperBuilderAssistant builderAssistant;
+  //SQL 片段
   private final Map<String, XNode> sqlFragments;
   private final String resource;
 
@@ -88,6 +89,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   public void parse() {
+    //如果没有加载过则需要加载
     if (!configuration.isResourceLoaded(resource)) {
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
@@ -105,16 +107,25 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void configurationElement(XNode context) {
     try {
+      //获取当前命名空间
       String namespace = context.getStringAttribute("namespace");
+      //如果命名空间为空或者为null则抛异常
       if (namespace == null || namespace.equals("")) {
         throw new BuilderException("Mapper's namespace cannot be empty");
       }
+      //设置构建代理的命名空间
       builderAssistant.setCurrentNamespace(namespace);
+      //解析cache-ref
       cacheRefElement(context.evalNode("cache-ref"));
+      //解析cache
       cacheElement(context.evalNode("cache"));
+      //解析parameterMap
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+      //解析resultMap
       resultMapElements(context.evalNodes("/mapper/resultMap"));
+      //解析SQL片段
       sqlElement(context.evalNodes("/mapper/sql"));
+      //解析select insert,update,delete
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing Mapper XML. Cause: " + e, e);
@@ -169,8 +180,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析未确定的statement
+   */
   private void parsePendingStatements() {
     Collection<XMLStatementBuilder> incompleteStatements = configuration.getIncompleteStatements();
+
     synchronized (incompleteStatements) {
       Iterator<XMLStatementBuilder> iter = incompleteStatements.iterator();
       while (iter.hasNext()) {
@@ -329,6 +344,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   private void sqlElement(List<XNode> list, String requiredDatabaseId) throws Exception {
     for (XNode context : list) {
       String databaseId = context.getStringAttribute("databaseId");
+      //获取<sql> ID属性
       String id = context.getStringAttribute("id");
       id = builderAssistant.applyCurrentNamespace(id, false);
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
@@ -396,6 +412,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void bindMapperForNamespace() {
+    //获取命名空间
     String namespace = builderAssistant.getCurrentNamespace();
     if (namespace != null) {
       Class<?> boundType = null;

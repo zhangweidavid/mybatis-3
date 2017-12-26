@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2016 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,20 +23,32 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * 参数映射关系
  * @author Clinton Begin
  */
 public class ParameterMapping {
 
   private Configuration configuration;
-
+  /**
+   * 数据库字段
+   */
   private String property;
   private ParameterMode mode;
   private Class<?> javaType = Object.class;
   private JdbcType jdbcType;
+  /**
+   * 精度
+   */
   private Integer numericScale;
+
+  /**
+   * 类型处理器
+   */
   private TypeHandler<?> typeHandler;
   private String resultMapId;
   private String jdbcTypeName;
+
+  /**表达式，目前还不支持**/
   private String expression;
 
   private ParameterMapping() {

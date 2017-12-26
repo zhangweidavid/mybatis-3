@@ -53,9 +53,13 @@ import org.apache.ibatis.type.TypeHandler;
  */
 public class XMLConfigBuilder extends BaseBuilder {
 
+  //标记该配置文件是否已经被解析过
   private boolean parsed;
+  //XPath解析器
   private final XPathParser parser;
+  //环境名称
   private String environment;
+  //
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
   public XMLConfigBuilder(Reader reader) {
@@ -91,6 +95,9 @@ public class XMLConfigBuilder extends BaseBuilder {
     this.parser = parser;
   }
 
+  /**
+   *
+   */
   public Configuration parse() {
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
@@ -102,20 +109,29 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void parseConfiguration(XNode root) {
     try {
-      //issue #117 read properties first
+      //第一步解析<properties>
       propertiesElement(root.evalNode("properties"));
+      //第二步解析<settings>
       Properties settings = settingsAsProperties(root.evalNode("settings"));
+      //加载自定义VFS(Virtual File System)
       loadCustomVfs(settings);
+      //解析类型别名
       typeAliasesElement(root.evalNode("typeAliases"));
+      //解析插件
       pluginElement(root.evalNode("plugins"));
+      //解析objectFactory
       objectFactoryElement(root.evalNode("objectFactory"));
+      //解析objectWrapperFactory
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      //解析reflectorFactory
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+      //设置setting
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
       typeHandlerElement(root.evalNode("typeHandlers"));
+      //解析mappers
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -213,23 +229,34 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析<properties></properties>
+   */
   private void propertiesElement(XNode context) throws Exception {
+    //如果存在<properties>节点
     if (context != null) {
+      //将<properties>下所有的<property>节点的name value转换为 Properties对象
       Properties defaults = context.getChildrenAsProperties();
+      //获取<properties>节点的resource属性
       String resource = context.getStringAttribute("resource");
+      //获取<propeties >节点中url属性
       String url = context.getStringAttribute("url");
+      //不允许同时配置了url，resource
       if (resource != null && url != null) {
         throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
+      //如果配置了 resource则解析resouse指定的文件
       if (resource != null) {
         defaults.putAll(Resources.getResourceAsProperties(resource));
       } else if (url != null) {
         defaults.putAll(Resources.getUrlAsProperties(url));
       }
+      //获取configuration对象中变量
       Properties vars = configuration.getVariables();
       if (vars != null) {
         defaults.putAll(vars);
       }
+      //将属性设置到parser,configuration中
       parser.setVariables(defaults);
       configuration.setVariables(defaults);
     }

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2016 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import org.apache.ibatis.executor.ExecutorException;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
@@ -32,12 +34,14 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.type.TypeHandlerRegistry;
+import org.apache.log4j.LogMF;
 
 /**
  * @author Clinton Begin
  */
 public abstract class BaseStatementHandler implements StatementHandler {
 
+  private static final Log log= LogFactory.getLog(BaseStatementHandler.class);
   protected final Configuration configuration;
   protected final ObjectFactory objectFactory;
   protected final TypeHandlerRegistry typeHandlerRegistry;
@@ -85,8 +89,11 @@ public abstract class BaseStatementHandler implements StatementHandler {
     ErrorContext.instance().sql(boundSql.getSql());
     Statement statement = null;
     try {
+      log.trace("BaseStatementHandler instantiateStatement");
       statement = instantiateStatement(connection);
+      log.trace("BaseStatementHandler setStatementTimeout , transactionTimeout="+transactionTimeout);
       setStatementTimeout(statement, transactionTimeout);
+      log.trace("BaseStatementHandler setFetchSize , fetchSize="+mappedStatement.getFetchSize());
       setFetchSize(statement);
       return statement;
     } catch (SQLException e) {

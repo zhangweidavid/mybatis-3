@@ -110,12 +110,16 @@ public class MetaObject {
   }
 
   public Object getValue(String name) {
+    //创建属性分割器
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    //如果有子属性
     if (prop.hasNext()) {
+      //获取子属性值
       MetaObject metaValue = metaObjectForProperty(prop.getIndexedName());
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
         return null;
       } else {
+        //递归获取属性值
         return metaValue.getValue(prop.getChildren());
       }
     } else {

@@ -18,6 +18,7 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * 属性标记生成器
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
@@ -26,19 +27,30 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
   private String index;
   private final String children;
 
+
   public PropertyTokenizer(String fullname) {
+    //从属性名称中找到.位置
     int delim = fullname.indexOf('.');
+    //如果存在.
     if (delim > -1) {
+      //找到父属性
       name = fullname.substring(0, delim);
+      //找到子属性
       children = fullname.substring(delim + 1);
     } else {
+      //如果不存在.,则表示当前属性没有子属性
       name = fullname;
       children = null;
     }
+    //带有索引的名称
     indexedName = name;
+    //从name中查找 '['位置
     delim = name.indexOf('[');
+    //如果存在属性则
     if (delim > -1) {
+      //找到所以
       index = name.substring(delim + 1, name.length() - 1);
+      //去除索引后的名称
       name = name.substring(0, delim);
     }
   }

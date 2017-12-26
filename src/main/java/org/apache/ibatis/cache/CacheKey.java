@@ -57,8 +57,9 @@ public class CacheKey implements Cloneable, Serializable {
   }
 
   public void update(Object object) {
-    int baseHashCode = object == null ? 1 : ArrayUtil.hashCode(object); 
-
+    //计算基础哈希值，如果object为null则为1，否则通过ArrayUtil计算哈希值
+    int baseHashCode = object == null ? 1 : ArrayUtil.hashCode(object);
+    //更新次数自增
     count++;
     checksum += baseHashCode;
     baseHashCode *= count;

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2016 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.util.Properties;
 
 /**
  * MyBatis uses an ObjectFactory to create all needed new Objects.
- * 
+ * MyBatis 使用ObjectFactory 去创建所有需要的新对象
  * @author Clinton Begin
  */
 public interface ObjectFactory {
@@ -32,9 +32,7 @@ public interface ObjectFactory {
   void setProperties(Properties properties);
 
   /**
-   * Creates a new object with default constructor. 
-   * @param type Object type
-   * @return
+   * 使用默认构造方法创建对象
    */
   <T> T create(Class<T> type);
 

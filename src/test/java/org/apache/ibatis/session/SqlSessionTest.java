@@ -833,7 +833,7 @@ public class SqlSessionTest extends BaseDataTest {
   }
 
   @Test
-  public void shouldFindPostsAllPostsWithDynamicSql() throws Exception {
+  public void shouldDecesAllPostsWithDynamicSql() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
       List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost");

@@ -49,6 +49,7 @@ import org.apache.ibatis.session.SqlSession;
 public class DefaultSqlSession implements SqlSession {
 
   private final Configuration configuration;
+  //
   private final Executor executor;
 
   private final boolean autoCommit;
@@ -144,7 +145,9 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
     try {
+      //根据ID查询到MappedStatement
       MappedStatement ms = configuration.getMappedStatement(statement);
+      //执行SQL
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);

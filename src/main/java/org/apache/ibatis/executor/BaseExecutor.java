@@ -113,6 +113,7 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    log.trace("BaseExecutor update clearLocalCache");
     clearLocalCache();
     return doUpdate(ms, parameter);
   }
@@ -335,6 +336,7 @@ public abstract class BaseExecutor implements Executor {
   }
 
   protected Connection getConnection(Log statementLog) throws SQLException {
+    log.trace("BaseExecutor getConnnection from transaction");
     Connection connection = transaction.getConnection();
     if (statementLog.isDebugEnabled()) {
       return ConnectionLogger.newInstance(connection, statementLog, queryStack);

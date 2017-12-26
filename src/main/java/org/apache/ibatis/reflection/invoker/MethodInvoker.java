@@ -41,6 +41,7 @@ public class MethodInvoker implements Invoker {
     return method.invoke(target, args);
   }
 
+  //这个实现没有什么意义
   @Override
   public Class<?> getType() {
     return type;

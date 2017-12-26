@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2016 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.apache.ibatis.executor;
 import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
@@ -36,6 +37,8 @@ import java.util.List;
  */
 public class SimpleExecutor extends BaseExecutor {
 
+  private static final Log log= LogFactory.getLog(SimpleExecutor.class);
+
   public SimpleExecutor(Configuration configuration, Transaction transaction) {
     super(configuration, transaction);
   }
@@ -44,7 +47,9 @@ public class SimpleExecutor extends BaseExecutor {
   public int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
     Statement stmt = null;
     try {
+      log.trace(" SimpleExecutor ms.getConfiguration()");
       Configuration configuration = ms.getConfiguration();
+      log.trace("SimpleExecutor configuration.newStatementHandler");
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
       stmt = prepareStatement(handler, ms.getStatementLog());
       return handler.update(stmt);

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2016 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import java.util.Properties;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.exceptions.ExceptionFactory;
 import org.apache.ibatis.executor.ErrorContext;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.session.defaults.DefaultSqlSessionFactory;
 
 /**
@@ -31,6 +33,8 @@ import org.apache.ibatis.session.defaults.DefaultSqlSessionFactory;
  * @author Clinton Begin
  */
 public class SqlSessionFactoryBuilder {
+
+  private static final Log log= LogFactory.getLog(SqlSessionFactoryBuilder.class);
 
   public SqlSessionFactory build(Reader reader) {
     return build(reader, null, null);
@@ -89,6 +93,7 @@ public class SqlSessionFactoryBuilder {
   }
     
   public SqlSessionFactory build(Configuration config) {
+    log.trace("SqlSessionFactoryBuilder  build new DefaultSqlSessionFactory ,config="+config);
     return new DefaultSqlSessionFactory(config);
   }
 

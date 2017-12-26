@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2015 the original author or authors.
+ *    Copyright 2009-2017 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.ResultHandler;
@@ -35,6 +37,8 @@ import org.apache.ibatis.session.RowBounds;
  * @author Clinton Begin
  */
 public class PreparedStatementHandler extends BaseStatementHandler {
+
+  private static final Log log= LogFactory.getLog(PreparedStatementHandler.class);
 
   public PreparedStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     super(executor, mappedStatement, parameter, rowBounds, resultHandler, boundSql);
@@ -73,7 +77,9 @@ public class PreparedStatementHandler extends BaseStatementHandler {
 
   @Override
   protected Statement instantiateStatement(Connection connection) throws SQLException {
+
     String sql = boundSql.getSql();
+    log.trace("PreparedStatementHandler  boudSql.getSql="+sql+" keyGenerator="+mappedStatement.getKeyGenerator());
     if (mappedStatement.getKeyGenerator() instanceof Jdbc3KeyGenerator) {
       String[] keyColumnNames = mappedStatement.getKeyColumns();
       if (keyColumnNames == null) {

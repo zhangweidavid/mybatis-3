@@ -104,30 +104,42 @@ public class Configuration {
   protected boolean aggressiveLazyLoading;
   protected boolean multipleResultSetsEnabled = true;
   protected boolean useGeneratedKeys;
+  //是否使用列标签，默认为true
   protected boolean useColumnLabel = true;
+  //是否使用缓存，默认为true
   protected boolean cacheEnabled = true;
   protected boolean callSettersOnNulls;
   protected boolean useActualParamName = true;
   protected boolean returnInstanceForEmptyRow;
-
+  //日志的前缀
   protected String logPrefix;
+  //日志的实现
   protected Class <? extends Log> logImpl;
+  //虚拟文件系统的实现
   protected Class <? extends VFS> vfsImpl;
+  //本地缓存作用域
   protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
   protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
   protected Set<String> lazyLoadTriggerMethods = new HashSet<String>(Arrays.asList(new String[] { "equals", "clone", "hashCode", "toString" }));
   protected Integer defaultStatementTimeout;
   protected Integer defaultFetchSize;
+  //默认执行器类型，可以通过配置文件setting defaultExecutorType 进行设置
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+  //自动映射行为，默认是partial,只对非嵌套进行自动映射
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
+  //自动映射未知列的行为，默认是不做任何处理
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
 
   protected Properties variables = new Properties();
+  //反射工厂
   protected ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
+  //对象工厂
   protected ObjectFactory objectFactory = new DefaultObjectFactory();
+  //对象包装工厂
   protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
-
+  //懒加载
   protected boolean lazyLoadingEnabled = false;
+  //代理工厂
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
   protected String databaseId;
@@ -138,7 +150,7 @@ public class Configuration {
    * @see <a href='https://code.google.com/p/mybatis/issues/detail?id=300'>Issue 300 (google code)</a>
    */
   protected Class<?> configurationFactory;
-
+  //mapper
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
   protected final InterceptorChain interceptorChain = new InterceptorChain();
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();

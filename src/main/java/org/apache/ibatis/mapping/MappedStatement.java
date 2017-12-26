@@ -37,17 +37,23 @@ public final class MappedStatement {
   private Configuration configuration;
   private String id;
   private Integer fetchSize;
+  //超时时间
   private Integer timeout;
+  //statement类型
   private StatementType statementType;
   private ResultSetType resultSetType;
   private SqlSource sqlSource;
+  //缓存
   private Cache cache;
   private ParameterMap parameterMap;
   private List<ResultMap> resultMaps;
   private boolean flushCacheRequired;
+  //是否使用缓存
   private boolean useCache;
   private boolean resultOrdered;
+  //sql 类型
   private SqlCommandType sqlCommandType;
+  //主键生成器
   private KeyGenerator keyGenerator;
   private String[] keyProperties;
   private String[] keyColumns;

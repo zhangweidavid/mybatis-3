@@ -53,34 +53,52 @@ public class XMLStatementBuilder extends BaseBuilder {
     this.requiredDatabaseId = databaseId;
   }
 
+  /**
+   * 解析 增删改查 SQL
+   */
   public void parseStatementNode() {
+    //获取sql ID
     String id = context.getStringAttribute("id");
+    //获取dataBaseId
     String databaseId = context.getStringAttribute("databaseId");
-
+    //如果 databaseId和 requiredDataBaseId不匹配则不处理
     if (!databaseIdMatchesCurrent(id, databaseId, this.requiredDatabaseId)) {
       return;
     }
-
+    //获取fetchSize
     Integer fetchSize = context.getIntAttribute("fetchSize");
+    //获取timeout
     Integer timeout = context.getIntAttribute("timeout");
+    //获取 parameterMap
     String parameterMap = context.getStringAttribute("parameterMap");
+    //获取parameterType
     String parameterType = context.getStringAttribute("parameterType");
+    //解析parameterType别名，转换为真正的类,会将parameterType 转换为小写字母，从别名注册表中找到相应的对象类型
+    // string,byte,long,short,int ,integer,double,float,boolean  byte[] long[] short[] _byte, _long,_short
     Class<?> parameterTypeClass = resolveClass(parameterType);
+    //
     String resultMap = context.getStringAttribute("resultMap");
     String resultType = context.getStringAttribute("resultType");
+    //获取sql解析的语言
     String lang = context.getStringAttribute("lang");
+    //获取相应的语言驱动器，默认为XML
     LanguageDriver langDriver = getLanguageDriver(lang);
 
     Class<?> resultTypeClass = resolveClass(resultType);
     String resultSetType = context.getStringAttribute("resultSetType");
     StatementType statementType = StatementType.valueOf(context.getStringAttribute("statementType", StatementType.PREPARED.toString()));
     ResultSetType resultSetTypeEnum = resolveResultSetType(resultSetType);
-
+    //获取节点名称
     String nodeName = context.getNode().getNodeName();
+    //获取SQL命令类型
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
+    //判断是否是查询sql
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
+    //如果是查询flushCache默认为false
     boolean flushCache = context.getBooleanAttribute("flushCache", !isSelect);
+    //如果是查询sql useCache默认为true
     boolean useCache = context.getBooleanAttribute("useCache", isSelect);
+    //结果排序默认为false
     boolean resultOrdered = context.getBooleanAttribute("resultOrdered", false);
 
     // Include Fragments before parsing
@@ -88,6 +106,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     includeParser.applyIncludes(context.getNode());
 
     // Parse selectKey after includes and remove them.
+    //在处理includes后解析selectKey并删除
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
     
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
