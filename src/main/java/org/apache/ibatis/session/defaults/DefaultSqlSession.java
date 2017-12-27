@@ -321,9 +321,11 @@ public class DefaultSqlSession implements SqlSession {
   }
 
   private Object wrapCollection(final Object object) {
+    //如果参数类型是Collection
     if (object instanceof Collection) {
       StrictMap<Object> map = new StrictMap<Object>();
       map.put("collection", object);
+      //如果是List则放入 list 也就是说，如果传入的参数类型是list 可以通过参数名称 list,或者collection获取
       if (object instanceof List) {
         map.put("list", object);
       }

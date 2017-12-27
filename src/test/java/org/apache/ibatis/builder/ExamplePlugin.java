@@ -27,11 +27,13 @@ public class ExamplePlugin implements Interceptor {
   private Properties properties;
   @Override
   public Object intercept(Invocation invocation) throws Throwable {
+    System.out.println("ExamplePlugin.....intercept....");
     return invocation.proceed();
   }
 
   @Override
   public Object plugin(Object target) {
+    System.out.println("ExamplePlugin..... plugin...."+target);
     return Plugin.wrap(target, this);
   }
 

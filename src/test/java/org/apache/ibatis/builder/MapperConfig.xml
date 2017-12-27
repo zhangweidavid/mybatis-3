@@ -56,6 +56,9 @@
     <plugin interceptor="org.apache.ibatis.builder.ExamplePlugin">
       <property name="pluginProperty" value="100"/>
     </plugin>
+    <plugin interceptor="org.apache.ibatis.builder.SQLStatsInterceptor">
+      <property name="dialect" value="test"/>
+    </plugin>
   </plugins>
 
   <environments default="development">

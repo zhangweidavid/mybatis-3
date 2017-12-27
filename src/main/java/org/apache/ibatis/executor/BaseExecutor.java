@@ -50,7 +50,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public abstract class BaseExecutor implements Executor {
 
   private static final Log log = LogFactory.getLog(BaseExecutor.class);
-
+  //事务，对数据库的connection进行包装
   protected Transaction transaction;
   protected Executor wrapper;
 
@@ -74,6 +74,7 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public Transaction getTransaction() {
+    //如果已经关闭则跑出异常，否则返回transaction
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
@@ -132,7 +133,9 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    //获取BoundSql
     BoundSql boundSql = ms.getBoundSql(parameter);
+    //创建缓存key
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
  }
@@ -141,16 +144,20 @@ public abstract class BaseExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     ErrorContext.instance().resource(ms.getResource()).activity("executing a query").object(ms.getId());
+    //如果已经关闭则跑出异常
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    //第一次查询以及要求刷新缓存时需要清空缓存
     if (queryStack == 0 && ms.isFlushCacheRequired()) {
       clearLocalCache();
     }
     List<E> list;
     try {
       queryStack++;
+      // resultHandler为null,则首先从本地缓存中读取
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
+      //如果缓存中存在则从缓存中获，否则从数据库中查询
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
@@ -160,11 +167,13 @@ public abstract class BaseExecutor implements Executor {
       queryStack--;
     }
     if (queryStack == 0) {
+      //执行延期加载
       for (DeferredLoad deferredLoad : deferredLoads) {
         deferredLoad.load();
       }
       // issue #601
       deferredLoads.clear();
+      //如果本地缓存作用域时statement则需要清空本地缓存
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
         // issue #482
         clearLocalCache();
@@ -184,7 +193,9 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    //创建延期加载对象
     DeferredLoad deferredLoad = new DeferredLoad(resultObject, property, key, localCache, configuration, targetType);
+    //如果延期加载对象可以被加载，则加载，否则添加到延期加载队列中
     if (deferredLoad.canLoad()) {
       deferredLoad.load();
     } else {
@@ -262,6 +273,7 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public void clearLocalCache() {
+    //如果没有关闭清空localCache,localOutputParameterCache
     if (!closed) {
       localCache.clear();
       localOutputParameterCache.clear();

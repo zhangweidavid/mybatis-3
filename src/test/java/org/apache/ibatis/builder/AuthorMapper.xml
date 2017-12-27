@@ -22,13 +22,13 @@
 
 <mapper namespace="org.apache.ibatis.domain.blog.mappers.AuthorMapper">
 
-	<parameterMap id="selectAuthor" type="org.apache.ibatis.domain.blog.Author">
+	<parameterMap id="selectAuthor" type="org.apache.ibatis.domain.blog.Author" >
 		<parameter property="id" />
 	</parameterMap>
 
 	<resultMap id="selectAuthor" type="org.apache.ibatis.domain.blog.Author">
 		<id column="id" property="id" />
-		<result property="username" column="username" />
+		<result property="username" column="username"/>
 		<result property="password" column="password" />
 		<result property="email" column="email" />
 		<result property="bio" column="bio" />

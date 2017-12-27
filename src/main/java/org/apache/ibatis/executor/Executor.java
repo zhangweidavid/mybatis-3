@@ -58,6 +58,9 @@ public interface Executor {
 
   boolean isCached(MappedStatement ms, CacheKey key);
 
+  /**
+   * 清空本地缓存
+   */
   void clearLocalCache();
 
   void deferLoad(MappedStatement ms, MetaObject resultObject, String property, CacheKey key, Class<?> targetType);
