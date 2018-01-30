@@ -41,10 +41,11 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public class DefaultParameterHandler implements ParameterHandler {
 
   private static final Log log= LogFactory.getLog(DefaultParameterHandler.class);
-
+  //类型处理器注册表
   private final TypeHandlerRegistry typeHandlerRegistry;
 
   private final MappedStatement mappedStatement;
+  //参数对象
   private final Object parameterObject;
   private final BoundSql boundSql;
   private final Configuration configuration;

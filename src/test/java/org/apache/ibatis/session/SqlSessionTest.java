@@ -394,10 +394,12 @@ public class SqlSessionTest extends BaseDataTest {
     SqlSession session = sqlMapper.openSession();
     try {
       Blog blog = session.selectOne("org.apache.ibatis.domain.blog.mappers.BlogMapper.selectBlogWithPostsUsingSubSelectLazily", 1);
+      System.out.println(".......... query End.............");
       Assert.assertTrue(blog instanceof Proxy);
       assertEquals("Jim Business", blog.getTitle());
       assertEquals(2, blog.getPosts().size());
       assertEquals("Corn nuts", blog.getPosts().get(0).getSubject());
+      System.out.println(".....getAuthor........");
       assertEquals(101, blog.getAuthor().getId());
       assertEquals("jim", blog.getAuthor().getUsername());
     } finally {

@@ -383,9 +383,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     String column = context.getStringAttribute("column");
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
+    //嵌套查询
     String nestedSelect = context.getStringAttribute("select");
+    //嵌套resultMap
     String nestedResultMap = context.getStringAttribute("resultMap",
         processNestedResultMappings(context, Collections.<ResultMapping> emptyList()));
+    //非空列
     String notNullColumn = context.getStringAttribute("notNullColumn");
     String columnPrefix = context.getStringAttribute("columnPrefix");
     String typeHandler = context.getStringAttribute("typeHandler");
