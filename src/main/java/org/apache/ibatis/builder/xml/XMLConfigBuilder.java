@@ -48,8 +48,7 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 /**
- * @author Clinton Begin
- * @author Kazuki Shimizu
+ * Configuration构造器
  */
 public class XMLConfigBuilder extends BaseBuilder {
 
@@ -59,7 +58,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private final XPathParser parser;
   //环境名称
   private String environment;
-  //
+  //反射工厂
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
   public XMLConfigBuilder(Reader reader) {
@@ -99,10 +98,13 @@ public class XMLConfigBuilder extends BaseBuilder {
    *
    */
   public Configuration parse() {
+    //如果该XML已经被解析过了则抛出异常
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
+    //开始解析，将解析标记设置为true
     parsed = true;
+    //解析configuration节点
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }
@@ -168,13 +170,18 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void typeAliasesElement(XNode parent) {
+    //如果存在typeAliases节点
     if (parent != null) {
+      //遍历所有子节点
       for (XNode child : parent.getChildren()) {
+        //如果节点名称是package，则注册包别名，否则就是类别名
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
+          //获取别名
           String alias = child.getStringAttribute("alias");
+          //获取类型
           String type = child.getStringAttribute("type");
           try {
             Class<?> clazz = Resources.classForName(type);
@@ -192,8 +199,11 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void pluginElement(XNode parent) throws Exception {
+    //如果存在plugings节点
     if (parent != null) {
+      //遍历所有子节点
       for (XNode child : parent.getChildren()) {
+        //获取interceptor属性
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).newInstance();

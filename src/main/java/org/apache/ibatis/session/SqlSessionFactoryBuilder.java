@@ -28,9 +28,7 @@ import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.session.defaults.DefaultSqlSessionFactory;
 
 /**
- * Builds {@link SqlSession} instances.
- *
- * @author Clinton Begin
+ * SqlSessionFactory建造器
  */
 public class SqlSessionFactoryBuilder {
 
@@ -50,7 +48,9 @@ public class SqlSessionFactoryBuilder {
 
   public SqlSessionFactory build(Reader reader, String environment, Properties properties) {
     try {
+      //创建XMLConfigBuider对象
       XMLConfigBuilder parser = new XMLConfigBuilder(reader, environment, properties);
+      //通过Configuration构建SqlsessionFactory
       return build(parser.parse());
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error building SqlSession.", e);
