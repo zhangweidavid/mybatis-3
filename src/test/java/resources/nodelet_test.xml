@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
        Copyright 2009-2016 the original author or authors.
@@ -15,7 +16,28 @@
        limitations under the License.
 
 -->
-<employee id="${id_var}"><blah something="that"/>
+
+<!DOCTYPE  employee[
+        <!ELEMENT employee ( blah?| first_name?| last_name?| birth_date?| height?| weight?| active?)+>
+        <!ATTLIST employee
+                id CDATA #IMPLIED
+                >
+        <!ELEMENT blah EMPTY>
+        <!ATTLIST blah something CDATA "0">
+        <!ELEMENT first_name (#PCDATA)>
+        <!ELEMENT last_name (#PCDATA)>
+        <!ELEMENT birth_date (year,month,day)>
+        <!ELEMENT year (#PCDATA)>
+        <!ELEMENT month (#PCDATA)>
+        <!ELEMENT day (#PCDATA)>
+        <!ELEMENT height (#PCDATA)>
+        <!ATTLIST height units CDATA "0">
+        <!ELEMENT weight (#PCDATA)>
+        <!ATTLIST weight units CDATA "0">
+        <!ELEMENT active (#PCDATA)>
+        ]>
+<employee id="${id_var}">
+  <blah something="that"/>
   <first_name>Jim</first_name>
   <last_name>Smith</last_name>
   <birth_date>
