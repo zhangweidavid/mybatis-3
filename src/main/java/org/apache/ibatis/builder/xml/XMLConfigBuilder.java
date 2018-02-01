@@ -176,6 +176,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       for (XNode child : parent.getChildren()) {
         //如果节点名称是package，则注册包别名，否则就是类别名
         if ("package".equals(child.getName())) {
+          //获取name属性
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
