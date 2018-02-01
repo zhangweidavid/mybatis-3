@@ -207,8 +207,11 @@ public class XMLConfigBuilder extends BaseBuilder {
         //获取interceptor属性
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
+        //创建Interceptor实例
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).newInstance();
+        //设置属性
         interceptorInstance.setProperties(properties);
+        //向拦截器链注入拦截器
         configuration.addInterceptor(interceptorInstance);
       }
     }

@@ -26,7 +26,7 @@ import java.util.Set;
 import org.apache.ibatis.reflection.ExceptionUtil;
 
 /**
- * @author Clinton Begin
+ * 插件辅助工具类，通过该类对需要拦截的方法进行动态增强
  */
 public class Plugin implements InvocationHandler {
 
