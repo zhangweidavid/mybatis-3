@@ -142,6 +142,9 @@ public class XPathParser {
     return evalString(document, expression);
   }
 
+  /**
+   * 在指定的节点下根据路径表达式找到字符串，其他解析为Long,Integer,Short等均是在此基础上完成
+   */
   public String evalString(Object root, String expression) {
     String result = (String) evaluate(expression, root, XPathConstants.STRING);
     //处理占位符
@@ -246,6 +249,7 @@ public class XPathParser {
   private Document createDocument(InputSource inputSource) {
     // important: this must only be called AFTER common constructor
     try {
+      //创建DocumentBuilderFactory实例
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setValidating(validation);
 
@@ -254,9 +258,21 @@ public class XPathParser {
       factory.setIgnoringElementContentWhitespace(false);
       factory.setCoalescing(false);
       factory.setExpandEntityReferences(true);
-
+     //通过DocumentBuilderFactory创建一个DocumentBuilder实例
       DocumentBuilder builder = factory.newDocumentBuilder();
+      /**
+       * 对于解析一个xml,sax
+
+       首先会读取该xml文档上的声明,根据声明去寻找相应的dtd定义,以便对文档的进行验证,
+       默认的寻找规则,(即:通过网络,实现上就是声明DTD的地址URI地址来下载DTD声明),
+       并进行认证,下载的过程是一个漫长的过程,而且当网络不可用时,这里会报错,就是应为相应的dtd没找到,
+
+       EntityResolver 的作用就是项目本身就可以提供一个如何寻找DtD 的声明方法,
+
+       即:由程序来实现寻找DTD声明的过程,比如我们将ＤＴＤ放在项目的某处在实现时直接将此文档读取并返回个SAX即可,这样就避免了通过网络来寻找DTD的声明
+       */
       builder.setEntityResolver(entityResolver);
+      //设置异常处理器
       builder.setErrorHandler(new ErrorHandler() {
         @Override
         public void error(SAXParseException exception) throws SAXException {
@@ -272,6 +288,7 @@ public class XPathParser {
         public void warning(SAXParseException exception) throws SAXException {
         }
       });
+      //通过documentBuilder对输入流进行解析，得到Document实例
       return builder.parse(inputSource);
     } catch (Exception e) {
       throw new BuilderException("Error creating document instance.  Cause: " + e, e);

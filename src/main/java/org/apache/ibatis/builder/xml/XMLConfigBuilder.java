@@ -85,6 +85,12 @@ public class XMLConfigBuilder extends BaseBuilder {
     this(new XPathParser(inputStream, true, props, new XMLMapperEntityResolver()), environment, props);
   }
 
+  /**
+   * 私有构造方法
+   * @param parser XPathParser
+   * @param environment 环境对象
+   * @param props 属性表（变量-值映射表）
+   */
   private XMLConfigBuilder(XPathParser parser, String environment, Properties props) {
     super(new Configuration());
     ErrorContext.instance().resource("SQL Mapper Configuration");
@@ -95,7 +101,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   /**
-   *
+   *  构造Configuration 方法
    */
   public Configuration parse() {
     //如果该XML已经被解析过了则抛出异常
@@ -104,11 +110,19 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
     //开始解析，将解析标记设置为true
     parsed = true;
-    //解析configuration节点
+    //从document中找到configuration节点，并对其内容进行解析；也就是说配置信息
+    //都是配置在configuration节点下的
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }
 
+  /**
+   * 为什么次数没有判断root为空呢？ 是因为通过DTD检查的配置文件一定存在configuration节点
+   * 为什么配置文件都指定了DTD（Document Type Definition）
+   * 可定义合法的XML文档构建模块。它使用一系列合法的元素来定义文档的结构。
+   * DTD 可被成行地声明于 XML 文档中，也可作为一个外部引用。
+   * @param root  configuration节点
+   */
   private void parseConfiguration(XNode root) {
     try {
       //第一步解析<properties>
