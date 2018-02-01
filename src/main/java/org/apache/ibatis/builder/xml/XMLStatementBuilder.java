@@ -57,7 +57,7 @@ public class XMLStatementBuilder extends BaseBuilder {
    * 解析 增删改查 SQL
    */
   public void parseStatementNode() {
-    //获取sql ID
+    //获取sql ID,此命名空间内的标识符
     String id = context.getStringAttribute("id");
     //获取dataBaseId
     String databaseId = context.getStringAttribute("databaseId");
@@ -65,19 +65,20 @@ public class XMLStatementBuilder extends BaseBuilder {
     if (!databaseIdMatchesCurrent(id, databaseId, this.requiredDatabaseId)) {
       return;
     }
-    //获取fetchSize
+    //获取fetchSize，尝试在获取数据时分批获取。
     Integer fetchSize = context.getIntAttribute("fetchSize");
-    //获取timeout
+    //设置超时，若超时则抛出异常。
     Integer timeout = context.getIntAttribute("timeout");
-    //获取 parameterMap
+    //获取 parameterMap,过期
     String parameterMap = context.getStringAttribute("parameterMap");
-    //获取parameterType
+    //获取parameterType  参数的类的全名或者alias，可选。默认为空。
     String parameterType = context.getStringAttribute("parameterType");
     //解析parameterType别名，转换为真正的类,会将parameterType 转换为小写字母，从别名注册表中找到相应的对象类型
     // string,byte,long,short,int ,integer,double,float,boolean  byte[] long[] short[] _byte, _long,_short
     Class<?> parameterTypeClass = resolveClass(parameterType);
-    //
+    //返回结果的类型全名或alias，如果结果是集合，此类型表示的是集合的成员类型。
     String resultMap = context.getStringAttribute("resultMap");
+    //使用指定的resultMap来映射结果集。resultMap 和 resultType只能二选一。
     String resultType = context.getStringAttribute("resultType");
     //获取sql解析的语言
     String lang = context.getStringAttribute("lang");
@@ -85,7 +86,9 @@ public class XMLStatementBuilder extends BaseBuilder {
     LanguageDriver langDriver = getLanguageDriver(lang);
 
     Class<?> resultTypeClass = resolveClass(resultType);
+    //FORWARD_ONLY，SCROLL_SENSITIVE或者SCROLL_INSENSITIVE。默认为空。
     String resultSetType = context.getStringAttribute("resultSetType");
+    //STATEMENT，PREPARED或者CALLABLE. 分别对应JDBC中的Statement，PreparedStatement和CallableStatement respectively。默认PREPARED.
     StatementType statementType = StatementType.valueOf(context.getStringAttribute("statementType", StatementType.PREPARED.toString()));
     ResultSetType resultSetTypeEnum = resolveResultSetType(resultSetType);
     //获取节点名称
@@ -94,9 +97,9 @@ public class XMLStatementBuilder extends BaseBuilder {
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
     //判断是否是查询sql
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
-    //如果是查询flushCache默认为false
+    //如果为true，每次调用，一级缓存和二级缓存都会回写。select语句中默认为false。
     boolean flushCache = context.getBooleanAttribute("flushCache", !isSelect);
-    //如果是查询sql useCache默认为true
+    //如果为true，结果将在二级缓存中缓存。select语句中默认为true
     boolean useCache = context.getBooleanAttribute("useCache", isSelect);
     //结果排序默认为false
     boolean resultOrdered = context.getBooleanAttribute("resultOrdered", false);
@@ -112,6 +115,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
     String resultSets = context.getStringAttribute("resultSets");
+    //主键。MyBatis会将生成的主键赋给这个列。联合主键使用逗号隔开。
     String keyProperty = context.getStringAttribute("keyProperty");
     String keyColumn = context.getStringAttribute("keyColumn");
     KeyGenerator keyGenerator;
@@ -120,6 +124,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     if (configuration.hasKeyGenerator(keyStatementId)) {
       keyGenerator = configuration.getKeyGenerator(keyStatementId);
     } else {
+      //将使用JDBC的getGeneratedKeys方法来获取主键的值。默认为false。
       keyGenerator = context.getBooleanAttribute("useGeneratedKeys",
           configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType))
           ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
@@ -132,6 +137,7 @@ public class XMLStatementBuilder extends BaseBuilder {
   }
 
   private void processSelectKeyNodes(String id, Class<?> parameterTypeClass, LanguageDriver langDriver) {
+    //解析selectKey
     List<XNode> selectKeyNodes = context.evalNodes("selectKey");
     if (configuration.getDatabaseId() != null) {
       parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, configuration.getDatabaseId());
