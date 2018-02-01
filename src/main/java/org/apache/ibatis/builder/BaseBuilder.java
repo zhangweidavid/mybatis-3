@@ -29,11 +29,14 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
- * @author Clinton Begin
+ * 构造器基类
  */
 public abstract class BaseBuilder {
+  //Mybatis配置对象
   protected final Configuration configuration;
+  //类型别名注册器
   protected final TypeAliasRegistry typeAliasRegistry;
+  //类型处理器注册器
   protected final TypeHandlerRegistry typeHandlerRegistry;
 
   public BaseBuilder(Configuration configuration) {

@@ -56,8 +56,13 @@ public class PropertyParser {
     return parser.parse(string);
   }
 
+  /**
+   * 变量占位符处理器
+   */
   private static class VariableTokenHandler implements TokenHandler {
+    //变量表
     private final Properties variables;
+    //是否允许设置默认值，默认是不允许设置默认值
     private final boolean enableDefaultValue;
     private final String defaultValueSeparator;
 
@@ -73,12 +78,17 @@ public class PropertyParser {
 
     @Override
     public String handleToken(String content) {
+      //如果变量表不为空
       if (variables != null) {
         String key = content;
+        //如果允许设置默认值
         if (enableDefaultValue) {
+          //找到默认值分隔符位置
           final int separatorIndex = content.indexOf(defaultValueSeparator);
           String defaultValue = null;
+          //如果存在默认值分给符
           if (separatorIndex >= 0) {
+            //找到变量名以及默认值
             key = content.substring(0, separatorIndex);
             defaultValue = content.substring(separatorIndex + defaultValueSeparator.length());
           }
@@ -86,6 +96,7 @@ public class PropertyParser {
             return variables.getProperty(key, defaultValue);
           }
         }
+        //不允许设置默认值，如果量表量中存在该变量，则返回该变量的值
         if (variables.containsKey(key)) {
           return variables.getProperty(key);
         }

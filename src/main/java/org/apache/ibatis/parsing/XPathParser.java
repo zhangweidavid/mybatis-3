@@ -40,14 +40,15 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /**
- * @author Clinton Begin
+ * XpathParser是Mybatis在Xpath的基础上提供的一个辅助类，将公共方法都抽象在类中，有效避免Xpath处理逻辑散落在各处
  */
 public class XPathParser {
-
+//XML 文件
   private final Document document;
   private boolean validation;
   private EntityResolver entityResolver;
   private Properties variables;
+  //Xpath
   private XPath xpath;
 
   public XPathParser(String xml) {
@@ -134,12 +135,16 @@ public class XPathParser {
     this.variables = variables;
   }
 
+  /**
+   *在document中根据express查找字符串
+   */
   public String evalString(String expression) {
     return evalString(document, expression);
   }
 
   public String evalString(Object root, String expression) {
     String result = (String) evaluate(expression, root, XPathConstants.STRING);
+    //处理占位符
     result = PropertyParser.parse(result, variables);
     return result;
   }
@@ -205,10 +210,16 @@ public class XPathParser {
     return xnodes;
   }
 
+  /**
+   * 在document中根据express查找节点
+   */
   public XNode evalNode(String expression) {
     return evalNode(document, expression);
   }
 
+  /**
+   *在节点root下 根据express查找Node节点
+   */
   public XNode evalNode(Object root, String expression) {
     Node node = (Node) evaluate(expression, root, XPathConstants.NODE);
     if (node == null) {
@@ -217,6 +228,13 @@ public class XPathParser {
     return new XNode(this, node, variables);
   }
 
+  /**
+   *
+   * @param expression xpath路径表达式
+   * @param root 文档节点
+   * @param returnType 返回类型
+   * @return
+   */
   private Object evaluate(String expression, Object root, QName returnType) {
     try {
       return xpath.evaluate(expression, root, returnType);
