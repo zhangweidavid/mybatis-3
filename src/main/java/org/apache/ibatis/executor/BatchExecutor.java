@@ -84,11 +84,17 @@ public class BatchExecutor extends BaseExecutor {
       throws SQLException {
     Statement stmt = null;
     try {
+      //刷新
       flushStatements();
+      //获取配置
       Configuration configuration = ms.getConfiguration();
+      //创建StatementHandler,该处可以通过插件增强
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameterObject, rowBounds, resultHandler, boundSql);
+      //获取连接
       Connection connection = getConnection(ms.getStatementLog());
+      //预处理
       stmt = handler.prepare(connection, transaction.getTimeout());
+      //设置参数
       handler.parameterize(stmt);
       return handler.<E>query(stmt, resultHandler);
     } finally {

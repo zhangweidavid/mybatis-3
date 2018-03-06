@@ -204,9 +204,11 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     ResultSetWrapper rsw = getFirstResultSet(stmt);
     //获取ResultMap列表，一般就是一个
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();
+    //获取resultMap数量
     int resultMapCount = resultMaps.size();
     validateResultMapsCount(rsw, resultMapCount);
     while (rsw != null && resultMapCount > resultSetCount) {
+      //获取resultMap
       ResultMap resultMap = resultMaps.get(resultSetCount);
       //完成映射，将结果加到入multipleResults中
       handleResultSet(rsw, resultMap, multipleResults, null);
@@ -373,6 +375,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     DefaultResultContext<Object> resultContext = new DefaultResultContext<Object>();
     //跳过指定行数，rowBounds凸显作用地方
     skipRows(rsw.getResultSet(), rowBounds);
+    //遍历
     while (shouldProcessMoreRows(resultContext, rowBounds) && rsw.getResultSet().next()) {
        //discriminator的处理,可以根据条件选择不同的映射
       ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rsw.getResultSet(), resultMap, null);
@@ -420,6 +423,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    *从 ROW中获取值
    */
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap) throws SQLException {
+    //新建ResultLoaderMap
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
     //实例化一个对象,类型为resultMap.getType(),最终调用了ObjectFactory.create()方法
     Object rowValue = createResultObject(rsw, resultMap, lazyLoader, null);
@@ -649,8 +653,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     if (resultObject != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
       final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
       for (ResultMapping propertyMapping : propertyMappings) {
-        // issue gcode #109 && issue #149
+          //如果属性映射存在嵌套查询ID且配置了懒加载
         if (propertyMapping.getNestedQueryId() != null && propertyMapping.isLazy()) {
+          //创建代理对象
           resultObject = configuration.getProxyFactory().createProxy(resultObject, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
           break;
         }

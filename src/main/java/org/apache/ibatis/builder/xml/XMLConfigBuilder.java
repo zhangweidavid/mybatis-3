@@ -412,8 +412,10 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void mapperElement(XNode parent) throws Exception {
+    //如果configuration中配置了mapper节点
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //如果配置对是包路径
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
           configuration.addMappers(mapperPackage);

@@ -67,13 +67,20 @@ public class DefaultParameterHandler implements ParameterHandler {
   public void setParameters(PreparedStatement ps) {
     log.trace(" setParameters  ps="+ps+", parameterObject="+parameterObject);
     ErrorContext.instance().activity("setting parameters").object(mappedStatement.getParameterMap().getId());
+    //获取参数映射关系
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+    //如果参数映射关系不为null
     if (parameterMappings != null) {
+      //遍历所有参数映射
       for (int i = 0; i < parameterMappings.size(); i++) {
+        //获取参数映射对象
         ParameterMapping parameterMapping = parameterMappings.get(i);
+        //如果参数映射参数类型不是OUT
         if (parameterMapping.getMode() != ParameterMode.OUT) {
           Object value;
+          //获取参数名称
           String propertyName = parameterMapping.getProperty();
+          //获取参数值
           if (boundSql.hasAdditionalParameter(propertyName)) { // issue #448 ask first for additional params
             value = boundSql.getAdditionalParameter(propertyName);
           } else if (parameterObject == null) {
@@ -84,11 +91,15 @@ public class DefaultParameterHandler implements ParameterHandler {
             MetaObject metaObject = configuration.newMetaObject(parameterObject);
             value = metaObject.getValue(propertyName);
           }
+          //获取参数类型处理器
           TypeHandler typeHandler = parameterMapping.getTypeHandler();
+          //获取参数类型
           JdbcType jdbcType = parameterMapping.getJdbcType();
+          //如果参数值和类型都为null,则使用配置的jdbcTypeForNull
           if (value == null && jdbcType == null) {
             jdbcType = configuration.getJdbcTypeForNull();
           }
+          //设置参数值
           try {
             typeHandler.setParameter(ps, i + 1, value, jdbcType);
           } catch (TypeException e) {
