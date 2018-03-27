@@ -100,6 +100,9 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     return enhanced;
   }
 
+  /**
+   * 增强结果对象代理实现
+   */
   private static class EnhancedResultObjectProxyImpl implements MethodHandler {
 
     private final Class<?> type;
@@ -111,16 +114,32 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     private final List<Object> constructorArgs;
 
     private EnhancedResultObjectProxyImpl(Class<?> type, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+      //class
       this.type = type;
+      //懒加载
       this.lazyLoader = lazyLoader;
+      //是否积极模式
       this.aggressive = configuration.isAggressiveLazyLoading();
+      //懒加载触发方法
       this.lazyLoadTriggerMethods = configuration.getLazyLoadTriggerMethods();
+      //对象工厂
       this.objectFactory = objectFactory;
       this.constructorArgTypes = constructorArgTypes;
       this.constructorArgs = constructorArgs;
     }
 
+    /**
+     *
+     * @param target 目标对象
+     * @param lazyLoader 懒加载
+     * @param configuration
+     * @param objectFactory
+     * @param constructorArgTypes
+     * @param constructorArgs
+     * @return
+     */
     public static Object createProxy(Object target, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+      //获取目标对象类
       final Class<?> type = target.getClass();
       EnhancedResultObjectProxyImpl callback = new EnhancedResultObjectProxyImpl(type, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
       Object enhanced = crateProxy(type, callback, constructorArgTypes, constructorArgs);

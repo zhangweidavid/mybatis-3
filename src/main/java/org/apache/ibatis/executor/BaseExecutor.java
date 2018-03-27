@@ -262,6 +262,7 @@ public abstract class BaseExecutor implements Executor {
     }
     clearLocalCache();
     flushStatements();
+    //事务提交
     if (required) {
       transaction.commit();
     }
@@ -363,6 +364,7 @@ public abstract class BaseExecutor implements Executor {
 
   protected Connection getConnection(Log statementLog) throws SQLException {
     log.trace("BaseExecutor getConnnection from transaction");
+    //从事务对象中获取连接
     Connection connection = transaction.getConnection();
     if (statementLog.isDebugEnabled()) {
       return ConnectionLogger.newInstance(connection, statementLog, queryStack);

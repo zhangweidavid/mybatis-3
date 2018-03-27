@@ -90,13 +90,17 @@ public abstract class BaseStatementHandler implements StatementHandler {
     Statement statement = null;
     try {
       log.trace("BaseStatementHandler instantiateStatement");
+      //初始化statement
       statement = instantiateStatement(connection);
       log.trace("BaseStatementHandler setStatementTimeout , transactionTimeout="+transactionTimeout);
+      //设置超时时间
       setStatementTimeout(statement, transactionTimeout);
       log.trace("BaseStatementHandler setFetchSize , fetchSize="+mappedStatement.getFetchSize());
+      //设置fetchSize
       setFetchSize(statement);
       return statement;
     } catch (SQLException e) {
+      //关闭statement
       closeStatement(statement);
       throw e;
     } catch (Exception e) {
@@ -121,11 +125,13 @@ public abstract class BaseStatementHandler implements StatementHandler {
   }
 
   protected void setFetchSize(Statement stmt) throws SQLException {
+    //获取fetchSize, 如果配置了fetchSize 则设置到statement
     Integer fetchSize = mappedStatement.getFetchSize();
     if (fetchSize != null) {
       stmt.setFetchSize(fetchSize);
       return;
     }
+    //设置defaultFetchSize
     Integer defaultFetchSize = configuration.getDefaultFetchSize();
     if (defaultFetchSize != null) {
       stmt.setFetchSize(defaultFetchSize);

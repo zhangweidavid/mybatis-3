@@ -415,6 +415,9 @@ public class XMLMapperBuilder extends BaseBuilder {
     return null;
   }
 
+  /**
+   * 将mapper和命名空间绑定在一起
+   */
   private void bindMapperForNamespace() {
     //获取命名空间
     String namespace = builderAssistant.getCurrentNamespace();
@@ -422,6 +425,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (namespace != null) {
       Class<?> boundType = null;
       try {
+        //根据命名空间获取class
         //根据命名空间获取类型
         boundType = Resources.classForName(namespace);
       } catch (ClassNotFoundException e) {
