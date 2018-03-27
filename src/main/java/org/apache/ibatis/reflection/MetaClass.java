@@ -30,8 +30,9 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  * @author Clinton Begin
  */
 public class MetaClass {
-
+  //反射工厂
   private final ReflectorFactory reflectorFactory;
+  //反射器
   private final Reflector reflector;
 
   private MetaClass(Class<?> type, ReflectorFactory reflectorFactory) {
@@ -44,7 +45,9 @@ public class MetaClass {
   }
 
   public MetaClass metaClassForProperty(String name) {
+    //从反射器中获取属性的类型
     Class<?> propType = reflector.getGetterType(name);
+    //构建这个属性的类的元数据
     return MetaClass.forClass(propType, reflectorFactory);
   }
 

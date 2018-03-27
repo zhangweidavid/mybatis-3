@@ -40,15 +40,18 @@ public class DefaultReflectorFactory implements ReflectorFactory {
 
   @Override
   public Reflector findForClass(Class<?> type) {
+    //如果classCacheEnabled为true
     if (classCacheEnabled) {
-            // synchronized (type) removed see issue #461
+      //则尝试从缓存中获取当前class的反射器对象
       Reflector cached = reflectorMap.get(type);
+      //如果缓存中没有则对当前class创建一个反射器并存入到缓存中
       if (cached == null) {
         cached = new Reflector(type);
         reflectorMap.put(type, cached);
       }
       return cached;
     } else {
+      //如果classCacheEnabled为false则每次都直接创建反射器对象
       return new Reflector(type);
     }
   }
