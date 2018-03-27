@@ -160,6 +160,7 @@ public class MetaClass {
     }
   }
 
+  //获取指定属性的getter方法的invoker
   public Invoker getGetInvoker(String name) {
     return reflector.getGetInvoker(name);
   }

@@ -143,8 +143,9 @@ public abstract class BaseExecutor implements Executor {
   @SuppressWarnings("unchecked")
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
+    //异常上下文
     ErrorContext.instance().resource(ms.getResource()).activity("executing a query").object(ms.getId());
-    //如果已经关闭则跑出异常
+    //如果已经关闭则抛出异常
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
@@ -154,24 +155,27 @@ public abstract class BaseExecutor implements Executor {
     }
     List<E> list;
     try {
+      //查询开始查询栈自增，主要处理递归调用
       queryStack++;
-      // resultHandler为null,则首先从本地缓存中读取
+      // 如果resultHander为null则尝试从localCache中获取，如果resultHandler不为null则表示自定义了resultHandler则不从本地缓存中获取
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
-      //如果缓存中存在则从缓存中获，否则从数据库中查询
+      //如果命中本地缓存则处理本地缓存数据，否则从数据库中查询
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
+      //查询栈自减
       queryStack--;
     }
+    //如果查询结束
     if (queryStack == 0) {
-      //执行延期加载
+      //执行所有延迟加载
       for (DeferredLoad deferredLoad : deferredLoads) {
         deferredLoad.load();
       }
-      // issue #601
+      //清空延迟加载队列
       deferredLoads.clear();
       //如果本地缓存作用域时statement则需要清空本地缓存
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
@@ -208,14 +212,19 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    //创建CacheKey
     CacheKey cacheKey = new CacheKey();
+    //设置MappedStatementId
     cacheKey.update(ms.getId());
+    //设置rowbounds信息
     cacheKey.update(rowBounds.getOffset());
     cacheKey.update(rowBounds.getLimit());
+    //设置sql
     cacheKey.update(boundSql.getSql());
+    //获取参数列表
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
-    // mimic DefaultParameterHandler logic
+    //设置各个参数值
     for (ParameterMapping parameterMapping : parameterMappings) {
       if (parameterMapping.getMode() != ParameterMode.OUT) {
         Object value;
@@ -233,6 +242,7 @@ public abstract class BaseExecutor implements Executor {
         cacheKey.update(value);
       }
     }
+    //如果配置了环境信息则还需要更新环境信息
     if (configuration.getEnvironment() != null) {
       // issue #176
       cacheKey.update(configuration.getEnvironment().getId());
@@ -334,12 +344,16 @@ public abstract class BaseExecutor implements Executor {
 
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
+    //首先在本地缓存中存入一个占位符
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
+      //执行数据库查询
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     } finally {
+      //书入库查询结束后删除占位符
       localCache.removeObject(key);
     }
+    //将查询结果存入本地缓存
     localCache.putObject(key, list);
     if (ms.getStatementType() == StatementType.CALLABLE) {
       localOutputParameterCache.putObject(key, parameter);
@@ -389,14 +403,17 @@ public abstract class BaseExecutor implements Executor {
     }
 
     public boolean canLoad() {
+      //localCache中存在且不是占位符则表示可以加载
       return localCache.getObject(key) != null && localCache.getObject(key) != EXECUTION_PLACEHOLDER;
     }
 
     public void load() {
       @SuppressWarnings( "unchecked" )
-      // we suppose we get back a List
+      //从本地缓存中获取指定Key的的结果
       List<Object> list = (List<Object>) localCache.getObject(key);
+      //从结果中提取指定类型的对象
       Object value = resultExtractor.extractObjectFromList(list, targetType);
+      //将值赋值为结果对象的指定属性
       resultObject.setValue(property, value);
     }
 

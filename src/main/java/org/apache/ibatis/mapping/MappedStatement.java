@@ -32,10 +32,12 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public final class MappedStatement {
-
+  //MappedStatement所处的文件
   private String resource;
   private Configuration configuration;
+  //stementId
   private String id;
+
   private Integer fetchSize;
   //超时时间
   private Integer timeout;
@@ -295,13 +297,17 @@ public final class MappedStatement {
   }
   
   public BoundSql getBoundSql(Object parameterObject) {
+    //从sqlSource中获取boundSql
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
+    //从boundSql中获取参数映射列表
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+    //如果参数映射列表为null或为空则新建一个boundSql
     if (parameterMappings == null || parameterMappings.isEmpty()) {
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 
     // check for nested result maps in parameter mappings (issue #30)
+    //检查在参数映射中嵌套结果映射
     for (ParameterMapping pm : boundSql.getParameterMappings()) {
       String rmId = pm.getResultMapId();
       if (rmId != null) {
@@ -315,6 +321,7 @@ public final class MappedStatement {
     return boundSql;
   }
 
+  //将非空字符串按照逗号分隔为字符串数组
   private static String[] delimitedStringToArray(String in) {
     if (in == null || in.trim().length() == 0) {
       return null;

@@ -424,7 +424,7 @@ public class Reflector {
     }
     return method;
   }
-
+  //获取指定属性的getter方法的invoker
   public Invoker getGetInvoker(String propertyName) {
     Invoker method = getMethods.get(propertyName);
     if (method == null) {

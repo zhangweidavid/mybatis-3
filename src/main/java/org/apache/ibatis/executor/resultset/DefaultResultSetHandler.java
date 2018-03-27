@@ -313,7 +313,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private void handleResultSet(ResultSetWrapper rsw, ResultMap resultMap, List<Object> multipleResults, ResultMapping parentMapping) throws SQLException {
     try {
-      //如果父类映射不为null
+      //如果存在父类结果映射
       if (parentMapping != null) {
         handleRowValues(rsw, resultMap, null, RowBounds.DEFAULT, parentMapping);
       } else {
@@ -342,7 +342,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   //处理结果
   public void handleRowValues(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping) throws SQLException {
-    //如果resultMap中存在嵌套ResultMap
+    //如果resultMap中存在嵌套ResultMap，需要确保没有rowBounds,resultHandler有效
     if (resultMap.hasNestedResultMaps()) {
       ensureNoRowBounds();
       checkResultHandler();
@@ -370,11 +370,13 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private void handleRowValuesForSimpleResultMap(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping)
       throws SQLException {
+    //创建默认结果上下文对象
     DefaultResultContext<Object> resultContext = new DefaultResultContext<Object>();
     //跳过指定行数，rowBounds凸显作用地方
     skipRows(rsw.getResultSet(), rowBounds);
+    //如果需要处理更多行且还有行数可以处理则循环
     while (shouldProcessMoreRows(resultContext, rowBounds) && rsw.getResultSet().next()) {
-       //discriminator的处理,可以根据条件选择不同的映射
+       //discriminator的处理,可以根据条件选择不同的结果映射，如果没有配置判决器则就是配置的resultMap
       ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rsw.getResultSet(), resultMap, null);
       //真正从ResultSet中映射出一个对象
       Object rowValue = getRowValue(rsw, discriminatedResultMap);
@@ -383,6 +385,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private void storeObject(ResultHandler<?> resultHandler, DefaultResultContext<Object> resultContext, Object rowValue, ResultMapping parentMapping, ResultSet rs) throws SQLException {
+    //父类结果映射对象不为null
     if (parentMapping != null) {
       linkToParents(rs, parentMapping, rowValue);
     } else {
@@ -584,6 +587,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // MULTIPLE RESULT SETS
 
   private void linkToParents(ResultSet rs, ResultMapping parentMapping, Object rowValue) throws SQLException {
+    //对父类结果映射创建一个缓存key
     CacheKey parentKey = createKeyForMultipleResults(rs, parentMapping, parentMapping.getColumn(), parentMapping.getForeignColumn());
     List<PendingRelation> parents = pendingRelations.get(parentKey);
     if (parents != null) {

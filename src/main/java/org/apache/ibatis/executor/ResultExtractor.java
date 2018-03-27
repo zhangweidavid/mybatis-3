@@ -34,15 +34,17 @@ public class ResultExtractor {
     this.objectFactory = objectFactory;
   }
 
+  //从list中提取对象
   public Object extractObjectFromList(List<Object> list, Class<?> targetType) {
     Object value = null;
+    //如果目标类型是List则直接返回
     if (targetType != null && targetType.isAssignableFrom(list.getClass())) {
       value = list;
-    } else if (targetType != null && objectFactory.isCollection(targetType)) {
+    } else if (targetType != null && objectFactory.isCollection(targetType)) {// 如果不是list但是集合则通过objectFactory创建指定类型对象
       value = objectFactory.create(targetType);
       MetaObject metaObject = configuration.newMetaObject(value);
       metaObject.addAll(list);
-    } else if (targetType != null && targetType.isArray()) {
+    } else if (targetType != null && targetType.isArray()) {// 如果是数组
       Class<?> arrayComponentType = targetType.getComponentType();
       Object array = Array.newInstance(arrayComponentType, list.size());
       if (arrayComponentType.isPrimitive()) {
@@ -54,6 +56,7 @@ public class ResultExtractor {
         value = list.toArray((Object[])array);
       }
     } else {
+      //如果不是集合也不是数组，则允许list为空,null或有且只有一个值
       if (list != null && list.size() > 1) {
         throw new ExecutorException("Statement returned more than one row, where no more than one was expected.");
       } else if (list != null && list.size() == 1) {
