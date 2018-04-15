@@ -30,8 +30,9 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  * @author Clinton Begin
  */
 public class BeanWrapper extends BaseWrapper {
-
+//原始对象
   private final Object object;
+  //
   private final MetaClass metaClass;
 
   public BeanWrapper(MetaObject metaObject, Object object) {
@@ -42,10 +43,13 @@ public class BeanWrapper extends BaseWrapper {
 
   @Override
   public Object get(PropertyTokenizer prop) {
+    //如果索引不为空则表示这是一个索引化属性，则将属性的值转换为一个集合
     if (prop.getIndex() != null) {
       Object collection = resolveCollection(prop, object);
+      //获取集合中对应索引的值
       return getCollectionValue(prop, collection);
     } else {
+      //如果不是索引化属性则可以直接获取这个属性的值
       return getBeanProperty(prop, object);
     }
   }
@@ -93,6 +97,7 @@ public class BeanWrapper extends BaseWrapper {
   @Override
   public Class<?> getGetterType(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    //如果当前属性还有子属性
     if (prop.hasNext()) {
       MetaObject metaValue = metaObject.metaObjectForProperty(prop.getIndexedName());
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
@@ -101,6 +106,7 @@ public class BeanWrapper extends BaseWrapper {
         return metaValue.getGetterType(prop.getChildren());
       }
     } else {
+      //没有子属性则直接获取
       return metaClass.getGetterType(name);
     }
   }
@@ -157,10 +163,13 @@ public class BeanWrapper extends BaseWrapper {
     return metaValue;
   }
 
+  //从对象中获取执行属性
   private Object getBeanProperty(PropertyTokenizer prop, Object object) {
     try {
+      //获取属性的getter的Invoker方法
       Invoker method = metaClass.getGetInvoker(prop.getName());
       try {
+        //发射调用getter方法获取属性值
         return method.invoke(object, NO_ARGUMENTS);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);

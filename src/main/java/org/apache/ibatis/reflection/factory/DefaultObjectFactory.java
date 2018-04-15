@@ -47,6 +47,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   @SuppressWarnings("unchecked")
   @Override
   public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+    //接口类型处理，对特殊接口进行处理
     Class<?> classToCreate = resolveInterface(type);
     // we know types are assignable
     return (T) instantiateClass(classToCreate, constructorArgTypes, constructorArgs);
@@ -60,6 +61,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   private  <T> T instantiateClass(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
     try {
       Constructor<T> constructor;
+      //如果参数类型为null或参数为null,获取参数无参的构造器，构造对象
       if (constructorArgTypes == null || constructorArgs == null) {
         constructor = type.getDeclaredConstructor();
         if (!constructor.isAccessible()) {
@@ -67,6 +69,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
         }
         return constructor.newInstance();
       }
+      //根据参数获取构造器，创建对象
       constructor = type.getDeclaredConstructor(constructorArgTypes.toArray(new Class[constructorArgTypes.size()]));
       if (!constructor.isAccessible()) {
         constructor.setAccessible(true);
@@ -93,17 +96,19 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     }
   }
 
+  //接口处理
   protected Class<?> resolveInterface(Class<?> type) {
     Class<?> classToCreate;
+    //如果返回类型是List,Collection,Iterable则处理后的类型是ArrayList.class
     if (type == List.class || type == Collection.class || type == Iterable.class) {
       classToCreate = ArrayList.class;
-    } else if (type == Map.class) {
+    } else if (type == Map.class) {//如果Map则返回HashMap.class
       classToCreate = HashMap.class;
-    } else if (type == SortedSet.class) { // issue #510 Collections Support
+    } else if (type == SortedSet.class) { //如果SortedSet则返回TreeSet
       classToCreate = TreeSet.class;
-    } else if (type == Set.class) {
+    } else if (type == Set.class) {//如果是Set则返回HashSet
       classToCreate = HashSet.class;
-    } else {
+    } else { //其他直接返回原来类型
       classToCreate = type;
     }
     return classToCreate;

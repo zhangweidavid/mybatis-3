@@ -93,6 +93,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (!configuration.isResourceLoaded(resource)) {
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
+      //Namespace和Mapper接口绑定
       bindMapperForNamespace();
     }
 
@@ -420,17 +421,19 @@ public class XMLMapperBuilder extends BaseBuilder {
   private void bindMapperForNamespace() {
     //获取命名空间
     String namespace = builderAssistant.getCurrentNamespace();
+    //如果命名空间不为null
     if (namespace != null) {
       Class<?> boundType = null;
       try {
         //根据命名空间获取class
+        //根据命名空间获取类型
         boundType = Resources.classForName(namespace);
       } catch (ClassNotFoundException e) {
         //ignore, bound type is not required
       }
-      //如果boundType不为null
+      //如果命名空间指定的类存在
       if (boundType != null) {
-        //如果这个boundType没有注册过
+        //如果该mapper接口没有被注册过
         if (!configuration.hasMapper(boundType)) {
           // Spring may not know the real resource name so we set a flag
           // to prevent loading again this resource from the mapper interface

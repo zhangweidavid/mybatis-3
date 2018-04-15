@@ -64,16 +64,21 @@ public class Reflector {
   private final Map<String, Class<?>> getTypes = new HashMap<String, Class<?>>();
   //默认构造方法
   private Constructor<?> defaultConstructor;
-  //
+  //对读写无感的属性映射表
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<String, String>();
 
   public Reflector(Class<?> clazz) {
     type = clazz;
+    //初始化defaultConstructor
     addDefaultConstructor(clazz);
+    //初始化getMethods,setMethods
     addGetterAndSetterMethods(clazz);
     addFields(clazz);
+    //可读属性名称数组
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
+    //可写属性名称数组
     writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
+    //将所有可读可写的属性都添加到caseInsensitivePropertyMap
     for (String propName : readablePropertyNames) {
       caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
     }
@@ -82,10 +87,15 @@ public class Reflector {
     }
   }
 
+  //初始化默认构造器
   private void addDefaultConstructor(Class<?> clazz) {
+    //获取当前类声明的所有构造方法
     Constructor<?>[] consts = clazz.getDeclaredConstructors();
+    //遍历构造方法
     for (Constructor<?> constructor : consts) {
+      //如果构造方法是无参构造方法
       if (constructor.getParameterTypes().length == 0) {
+        //如归可以访问私有方法，则将构造方法的accessible设置为true
         if (canAccessPrivateMethods()) {
           try {
             constructor.setAccessible(true);
@@ -93,6 +103,7 @@ public class Reflector {
             // Ignored. This is only a final precaution, nothing we can do.
           }
         }
+        //如果构造方法是可访问的则将其设置为默认构造方法
         if (constructor.isAccessible()) {
           this.defaultConstructor = constructor;
         }
@@ -104,10 +115,11 @@ public class Reflector {
     try {
       Map<String, List<Method>> conflictingGetters = new HashMap<String, List<Method>>();
       Map<String, List<Method>> conflictingSetters = new HashMap<String, List<Method>>();
+      //通过javaBean的内省获取PropertyDescriptor
       PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(cls).getPropertyDescriptors();
 
       for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-
+        //遍历属性名称
         String name = propertyDescriptor.getName();
         addMethodConflict(conflictingGetters, name, propertyDescriptor.getReadMethod());
         addMethodConflict(conflictingSetters,name,propertyDescriptor.getWriteMethod());
@@ -120,27 +132,35 @@ public class Reflector {
     }
   }
 
+  //解决getter方法冲突
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
+      //获取属性名称
       String propName = entry.getKey();
+      //遍历该属性对应的getter方法
       for (Method candidate : entry.getValue()) {
+        //如果胜出者为null则将当前申请者设置为胜出者
         if (winner == null) {
           winner = candidate;
           continue;
         }
+        //获取胜出者的返回类型
         Class<?> winnerType = winner.getReturnType();
+        //获取申请者的返回类型
         Class<?> candidateType = candidate.getReturnType();
+        //如果胜出者的返回类型同申请者的返回类型相同
         if (candidateType.equals(winnerType)) {
+          //如果返回类型不是boolean类型则抛出反射异常
           if (!boolean.class.equals(candidateType)) {
             throw new ReflectionException(
                 "Illegal overloaded getter method with ambiguous type for property "
                     + propName + " in class " + winner.getDeclaringClass()
                     + ". This breaks the JavaBeans specification and can cause unpredictable results.");
-          } else if (candidate.getName().startsWith("is")) {
+          } else if (candidate.getName().startsWith("is")) {//如果返回类型是boolean类型则isXXX胜出
             winner = candidate;
           }
-        } else if (candidateType.isAssignableFrom(winnerType)) {
+        } else if (candidateType.isAssignableFrom(winnerType)) {//如果申请者的类型是当前胜出者的父类或父接口则指定范围更小的胜出
           // OK getter type is descendant
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
@@ -384,10 +404,14 @@ public class Reflector {
     return sb.toString();
   }
 
+  //检查是否有反射权限，如果配置了SecurityManager同时没有反射权限则返回false
   private static boolean canAccessPrivateMethods() {
     try {
+      //获取系统安全管理器
       SecurityManager securityManager = System.getSecurityManager();
+      //如果系统安全管理器不为null
       if (null != securityManager) {
+        //检查是否有反射权限，如果有则返回true,否则返回false
         securityManager.checkPermission(new ReflectPermission("suppressAccessChecks"));
       }
     } catch (SecurityException e) {
@@ -424,7 +448,7 @@ public class Reflector {
     }
     return method;
   }
-
+  //获取指定属性的getter方法的invoker
   public Invoker getGetInvoker(String propertyName) {
     Invoker method = getMethods.get(propertyName);
     if (method == null) {

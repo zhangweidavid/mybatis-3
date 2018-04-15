@@ -46,15 +46,18 @@ public class SqlSourceBuilder extends BaseBuilder {
     return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
   }
 
+  //参数映射占位标记符处理器
   private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
-
+    //参数映射列表
     private List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
     private Class<?> parameterType;
     private MetaObject metaParameters;
 
     public ParameterMappingTokenHandler(Configuration configuration, Class<?> parameterType, Map<String, Object> additionalParameters) {
       super(configuration);
+      //参数类型
       this.parameterType = parameterType;
+      //参数元数据
       this.metaParameters = configuration.newMetaObject(additionalParameters);
     }
 
@@ -64,10 +67,12 @@ public class SqlSourceBuilder extends BaseBuilder {
 
     @Override
     public String handleToken(String content) {
+      //添加参数映射，同时使用？号替换占位标记符
       parameterMappings.add(buildParameterMapping(content));
       return "?";
     }
 
+    //构建ParameterMapping
     private ParameterMapping buildParameterMapping(String content) {
       Map<String, String> propertiesMap = parseParameterMapping(content);
       String property = propertiesMap.get("property");

@@ -40,6 +40,7 @@ public class ParameterExpression extends HashMap<String, String> {
   }
 
   private void parse(String expression) {
+    //跳过无效字符
     int p = skipWS(expression, 0);
     if (expression.charAt(p) == '(') {
       expression(expression, p + 1);

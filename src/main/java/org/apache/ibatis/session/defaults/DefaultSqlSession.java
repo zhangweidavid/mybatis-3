@@ -97,14 +97,20 @@ public class DefaultSqlSession implements SqlSession {
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds) {
+    //执行list查询
     final List<? extends V> list = selectList(statement, parameter, rowBounds);
+    //创建DefaultMapResultHandler
     final DefaultMapResultHandler<K, V> mapResultHandler = new DefaultMapResultHandler<K, V>(mapKey,
         configuration.getObjectFactory(), configuration.getObjectWrapperFactory(), configuration.getReflectorFactory());
+    //创建DefaultResultCondtext
     final DefaultResultContext<V> context = new DefaultResultContext<V>();
+    //对结果进行遍历
     for (V o : list) {
+      //将结果对量添加到结果上下文，congtext在该处没有实际用户仅仅是为了适配handler请求参数
       context.nextResultObject(o);
       mapResultHandler.handleResult(context);
     }
+    //获取结果
     return mapResultHandler.getMappedResults();
   }
 
@@ -320,17 +326,23 @@ public class DefaultSqlSession implements SqlSession {
     return (!autoCommit && dirty) || force;
   }
 
+
+  /**
+   *  通过该方法可以发现，不管传入的参数是list还是Set都可以通过collection这个key获取参数值
+   */
   private Object wrapCollection(final Object object) {
     //如果参数类型是Collection
     if (object instanceof Collection) {
+      //创建一个HashMap对象
       StrictMap<Object> map = new StrictMap<Object>();
+      //向map中存入key为collecion，value为object
       map.put("collection", object);
       //如果是List则放入 list 也就是说，如果传入的参数类型是list 可以通过参数名称 list,或者collection获取
       if (object instanceof List) {
         map.put("list", object);
       }
       return map;
-    } else if (object != null && object.getClass().isArray()) {
+    } else if (object != null && object.getClass().isArray()) { // 如果对象是数组类型则向Map中存入  key为array，value为object
       StrictMap<Object> map = new StrictMap<Object>();
       map.put("array", object);
       return map;

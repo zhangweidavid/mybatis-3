@@ -31,7 +31,7 @@ import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
  * @author Clinton Begin
  */
 public class MetaObject {
-
+  //原始对象
   private final Object originalObject;
   private final ObjectWrapper objectWrapper;
   private final ObjectFactory objectFactory;
@@ -114,15 +114,17 @@ public class MetaObject {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     //如果有子属性
     if (prop.hasNext()) {
-      //获取子属性值
+      //获取索引化的属性，如果属性不是一个索引化的属性则indexedName和name相同
       MetaObject metaValue = metaObjectForProperty(prop.getIndexedName());
+      //如果获取到的元数据为null_meta_object则返回null
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
         return null;
       } else {
-        //递归获取属性值
+        //否则获取索引化属性的属性值，该处是一个递归调用
         return metaValue.getValue(prop.getChildren());
       }
     } else {
+      //如果没有子属性则可以直接获取属性值，如果是索引化参数则获取索引对应的值
       return objectWrapper.get(prop);
     }
   }

@@ -25,11 +25,12 @@ import org.apache.ibatis.session.ResultContext;
 import org.apache.ibatis.session.ResultHandler;
 
 /**
- * @author Clinton Begin
+ * 默认Map结果处理器
  */
 public class DefaultMapResultHandler<K, V> implements ResultHandler<V> {
 
   private final Map<K, V> mappedResults;
+  //mapKey
   private final String mapKey;
   private final ObjectFactory objectFactory;
   private final ObjectWrapperFactory objectWrapperFactory;
@@ -46,10 +47,13 @@ public class DefaultMapResultHandler<K, V> implements ResultHandler<V> {
 
   @Override
   public void handleResult(ResultContext<? extends V> context) {
+    //从结果上下文中获取结果对象
     final V value = context.getResultObject();
+    //获取结果对象的元数据
     final MetaObject mo = MetaObject.forObject(value, objectFactory, objectWrapperFactory, reflectorFactory);
-    // TODO is that assignment always true?
+    // 获取key
     final K key = (K) mo.getValue(mapKey);
+    //添加到Map中
     mappedResults.put(key, value);
   }
 

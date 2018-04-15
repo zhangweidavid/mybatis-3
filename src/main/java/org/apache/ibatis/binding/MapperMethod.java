@@ -57,21 +57,26 @@ public class MapperMethod {
     Object result;
     //根据不同的SQL类型选择不同的处理过程
     switch (command.getType()) {
+      //插入
       case INSERT: {
+        //构建请求参数
         Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
       }
+      //更新
       case UPDATE: {
         Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.update(command.getName(), param));
         break;
       }
+      //删除
       case DELETE: {
         Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.delete(command.getName(), param));
         break;
       }
+      //查询
       case SELECT:
         //如果返回void且则有结果处理器
         if (method.returnsVoid() && method.hasResultHandler()) {
@@ -122,14 +127,18 @@ public class MapperMethod {
   }
 
   private void executeWithResultHandler(SqlSession sqlSession, Object[] args) {
+    //获取MappedStatement
     MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(command.getName());
+    //如果MappedStatement类型是callable同事返回类型为void则抛出异常
     if (!StatementType.CALLABLE.equals(ms.getStatementType())
         && void.class.equals(ms.getResultMaps().get(0).getType())) {
       throw new BindingException("method " + command.getName()
           + " needs either a @ResultMap annotation, a @ResultType annotation,"
           + " or a resultType attribute in XML so a ResultHandler can be used as a parameter.");
     }
+    //构建请求参数对象
     Object param = method.convertArgsToSqlCommandParam(args);
+    //如果配置了rowBounds
     if (method.hasRowBounds()) {
       RowBounds rowBounds = method.extractRowBounds(args);
       sqlSession.select(command.getName(), param, rowBounds, method.extractResultHandler(args));
@@ -216,6 +225,7 @@ public class MapperMethod {
     }
 
   }
+
 
   public static class SqlCommand {
 

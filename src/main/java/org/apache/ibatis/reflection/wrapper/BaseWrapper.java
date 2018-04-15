@@ -26,7 +26,7 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  * @author Clinton Begin
  */
 public abstract class BaseWrapper implements ObjectWrapper {
-
+  //反射调用使用的无参
   protected static final Object[] NO_ARGUMENTS = new Object[0];
   protected final MetaObject metaObject;
 

@@ -43,12 +43,15 @@ public class DynamicContext {
   private int uniqueNumber = 0;
 
   public DynamicContext(Configuration configuration, Object parameterObject) {
+    //如果参数对象不为null同时参数对象也不是Map
     if (parameterObject != null && !(parameterObject instanceof Map)) {
+      //对参数对象构建元数据
       MetaObject metaObject = configuration.newMetaObject(parameterObject);
       bindings = new ContextMap(metaObject);
     } else {
       bindings = new ContextMap(null);
     }
+    //向绑定信息存入_parameter=parameterObject, _databseId=xxx
     bindings.put(PARAMETER_OBJECT_KEY, parameterObject);
     bindings.put(DATABASE_ID_KEY, configuration.getDatabaseId());
   }

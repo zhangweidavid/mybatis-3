@@ -22,35 +22,39 @@ import java.util.Iterator;
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
+  //属性
   private String name;
+  //索引化的属性名称，如 list[10],如果当前属性没有编入索引则和name相同
   private final String indexedName;
+  //索引
   private String index;
+  //子属性
   private final String children;
 
 
   public PropertyTokenizer(String fullname) {
-    //从属性名称中找到.位置
+    //从属性fullname中查找分隔符"."
     int delim = fullname.indexOf('.');
-    //如果存在.
+    //如果存在分隔符，则将属性通过分割符分割为两部分
     if (delim > -1) {
-      //找到父属性
+      //一级属性
       name = fullname.substring(0, delim);
-      //找到子属性
+      //子属性
       children = fullname.substring(delim + 1);
     } else {
-      //如果不存在.,则表示当前属性没有子属性
+      //如果没有分割符则表示没有子属性，则将children设置为null
       name = fullname;
       children = null;
     }
-    //带有索引的名称
+    //将属性名称赋值给indexedName
     indexedName = name;
-    //从name中查找 '['位置
+    //从当前属性中查找分隔符；如果list[10]
     delim = name.indexOf('[');
     //如果存在属性则
     if (delim > -1) {
-      //找到所以
+      //找到索引，如list[10] 这样的属性可以得到index=10
       index = name.substring(delim + 1, name.length() - 1);
-      //去除索引后的名称
+      //得到正确的属性名称
       name = name.substring(0, delim);
     }
   }
