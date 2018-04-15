@@ -20,12 +20,12 @@ package org.apache.ibatis.reflection;
  */
 public interface ReflectorFactory {
 
-  /**
-   *
-   */
+  //类反射对象是否可以缓存
   boolean isClassCacheEnabled();
 
+  //设置类与反射的映射关系是否可以缓存
   void setClassCacheEnabled(boolean classCacheEnabled);
 
+  //获取当前类型的反射对象
   Reflector findForClass(Class<?> type);
 }

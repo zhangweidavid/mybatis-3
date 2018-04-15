@@ -23,15 +23,19 @@ import java.lang.reflect.Method;
  */
 public class MethodInvoker implements Invoker {
 
+  //参数类型或返回类型
   private final Class<?> type;
+
+  //真实需要调用的方法
   private final Method method;
 
+  //构造方法
   public MethodInvoker(Method method) {
     this.method = method;
-
+    //如果是setter方法type就是参数类型
     if (method.getParameterTypes().length == 1) {
       type = method.getParameterTypes()[0];
-    } else {
+    } else {//如果是getter方法就是方法的返回类型
       type = method.getReturnType();
     }
   }
@@ -41,7 +45,7 @@ public class MethodInvoker implements Invoker {
     return method.invoke(target, args);
   }
 
-  //这个实现没有什么意义
+
   @Override
   public Class<?> getType() {
     return type;

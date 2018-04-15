@@ -22,7 +22,10 @@ import java.util.concurrent.ConcurrentMap;
  * 默认反射工厂
  */
 public class DefaultReflectorFactory implements ReflectorFactory {
+  //类反射对象是否可以缓存
   private boolean classCacheEnabled = true;
+
+  //类和反射对象的映射表，作为本地缓存使用
   private final ConcurrentMap<Class<?>, Reflector> reflectorMap = new ConcurrentHashMap<Class<?>, Reflector>();
 
   public DefaultReflectorFactory() {
@@ -40,11 +43,11 @@ public class DefaultReflectorFactory implements ReflectorFactory {
 
   @Override
   public Reflector findForClass(Class<?> type) {
-    //如果classCacheEnabled为true
+    //如果是可以缓存类的反射对象
     if (classCacheEnabled) {
-      //则尝试从缓存中获取当前class的反射器对象
+      //则尝试从缓存中获取当前class的反射对象
       Reflector cached = reflectorMap.get(type);
-      //如果缓存中没有则对当前class创建一个反射器并存入到缓存中
+      //如果缓存中没有则对当前class创建一个反射并存入到缓存中
       if (cached == null) {
         cached = new Reflector(type);
         reflectorMap.put(type, cached);

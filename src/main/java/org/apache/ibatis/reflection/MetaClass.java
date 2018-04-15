@@ -32,6 +32,7 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
 public class MetaClass {
   //反射工厂
   private final ReflectorFactory reflectorFactory;
+
   //反射器
   private final Reflector reflector;
 

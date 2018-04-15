@@ -18,9 +18,7 @@ package org.apache.ibatis.reflection.invoker;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
-/**
- * @author Clinton Begin
- */
+//如果属性没有getter方法会创建一个GetFieldInvoke
 public class GetFieldInvoker implements Invoker {
   private final Field field;
 

@@ -18,9 +18,7 @@ package org.apache.ibatis.reflection.invoker;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
-/**
- * @author Clinton Begin
- */
+//如果没有setter方法会创建一个SetFieldInvoker
 public class SetFieldInvoker implements Invoker {
   private final Field field;
 
