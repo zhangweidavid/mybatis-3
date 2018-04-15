@@ -42,29 +42,27 @@ import org.apache.ibatis.reflection.invoker.SetFieldInvoker;
 import org.apache.ibatis.reflection.property.PropertyNamer;
 
 /**
- * This class represents a cached set of class definition information that
- * allows for easy mapping between property names and getter/setter methods.
  * 这个类表示一组可缓存的类定义信息允许在属性名称和getter / setter方法之间轻松映射。
  * @author Clinton Begin
  */
 public class Reflector {
-  //类
+  //对应Class类型
   private final Class<?> type;
-  //可读的属性
+  //可读的属性，所谓可读属性就是存在相应getter方法的属性
   private final String[] readablePropertyNames;
-  //可写的属性
+  //可写的属性，所谓可写属性就是存在相应setter方法的属性
   private final String[] writeablePropertyNames;
-  //写方法
+  //setter映射表，key是属性，值是Invoker 就是对setter方法的一个封装
   private final Map<String, Invoker> setMethods = new HashMap<String, Invoker>();
-  //读方法
+  //getter映射表，key是属性，值是Invoker
   private final Map<String, Invoker> getMethods = new HashMap<String, Invoker>();
-  //写方法参数类型
+  //写方法参数类型,key是属性名称值是参数类型
   private final Map<String, Class<?>> setTypes = new HashMap<String, Class<?>>();
-  //读方法，返回类型
+  //读方法返回类型映射表，key是属性名称，值是getter返回值的类型
   private final Map<String, Class<?>> getTypes = new HashMap<String, Class<?>>();
   //默认构造方法
   private Constructor<?> defaultConstructor;
-  //对读写无感的属性映射表
+  //对读写无感的属性映射表，也就是记录所有读写方法的集合
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<String, String>();
 
   public Reflector(Class<?> clazz) {
@@ -73,6 +71,7 @@ public class Reflector {
     addDefaultConstructor(clazz);
     //初始化getMethods,setMethods
     addGetterAndSetterMethods(clazz);
+    //
     addFields(clazz);
     //可读属性名称数组
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
@@ -113,34 +112,43 @@ public class Reflector {
 
   private void addGetterAndSetterMethods(Class<?> cls)  {
     try {
+      //冲突的getter方法，该映射表中保存了属性的所有getter方法
       Map<String, List<Method>> conflictingGetters = new HashMap<String, List<Method>>();
+      //冲突的setter方法
       Map<String, List<Method>> conflictingSetters = new HashMap<String, List<Method>>();
+
       //通过javaBean的内省获取PropertyDescriptor
       PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(cls).getPropertyDescriptors();
 
+      //遍历该类下的属性
       for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-        //遍历属性名称
+        //获取属性的名称
         String name = propertyDescriptor.getName();
+        //将属性的getter方法添加到映射表中
         addMethodConflict(conflictingGetters, name, propertyDescriptor.getReadMethod());
+        //将属性的setter方法添加到映射表中
         addMethodConflict(conflictingSetters,name,propertyDescriptor.getWriteMethod());
 
       }
+      //解决getter方法冲突，所谓解决冲突就是如果存在多个getter方法选择一个最优方法
       resolveGetterConflicts(conflictingGetters);
+      //解决setter方法冲突
       resolveSetterConflicts(conflictingSetters);
     }catch (Exception e){
-
+      //忽略异常
     }
   }
 
   //解决getter方法冲突
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
+    //遍历所有属性
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
       //获取属性名称
       String propName = entry.getKey();
       //遍历该属性对应的getter方法
       for (Method candidate : entry.getValue()) {
-        //如果胜出者为null则将当前申请者设置为胜出者
+        //如果胜出者为null则将当前申请者赋值给生出者，该方法在第一次循环的时候执行
         if (winner == null) {
           winner = candidate;
           continue;
@@ -151,7 +159,7 @@ public class Reflector {
         Class<?> candidateType = candidate.getReturnType();
         //如果胜出者的返回类型同申请者的返回类型相同
         if (candidateType.equals(winnerType)) {
-          //如果返回类型不是boolean类型则抛出反射异常
+          //如果返回类型不是boolean类型则抛出反射异常，boolean 类型优先使用isXXX
           if (!boolean.class.equals(candidateType)) {
             throw new ReflectionException(
                 "Illegal overloaded getter method with ambiguous type for property "
@@ -171,11 +179,13 @@ public class Reflector {
                   + ". This breaks the JavaBeans specification and can cause unpredictable results.");
         }
       }
+      //将最优的getter方法添加到getter方法映射表中
       addGetMethod(propName, winner);
     }
   }
 
   private void addGetMethod(String name, Method method) {
+    //如果是有效的属性名称，则将属性名称对象的getter方法包装成一个Invoker添加到getMethods中，同时将返回值类型放到getTypes中
     if (isValidPropertyName(name)) {
       getMethods.put(name, new MethodInvoker(method));
       Type returnType = TypeParameterResolver.resolveReturnType(method, type);
@@ -199,27 +209,37 @@ public class Reflector {
   }
 
   private void addMethodConflict(Map<String, List<Method>> conflictingMethods, String name, Method method) {
+    //获取属性对应的方法集合
     List<Method> list = conflictingMethods.get(name);
+    //如果集合为空，则创建一个新的ArrayList,并将集合放到映射表中
     if (list == null) {
       list = new ArrayList<Method>();
       conflictingMethods.put(name, list);
     }
+    //将当前方法添加到集合中
     list.add(method);
   }
 
   private void resolveSetterConflicts(Map<String, List<Method>> conflictingSetters) {
+    //遍历所有属性
     for (String propName : conflictingSetters.keySet()) {
+      //获取当前属性的所有setter方法
       List<Method> setters = conflictingSetters.get(propName);
+      //获取属性的getter方法返回类型
       Class<?> getterType = getTypes.get(propName);
       Method match = null;
       ReflectionException exception = null;
+      //遍历setter方法
       for (Method setter : setters) {
+        //获取setter 方法的参数类型
         Class<?> paramType = setter.getParameterTypes()[0];
+        //如果setter方法的参数类型和getter方法返回类型相同则匹配出最佳setter
         if (paramType.equals(getterType)) {
           // should be the best match
           match = setter;
           break;
         }
+        //如果没有匹配getter返回类型且没有异常，则选择一个最佳方法
         if (exception == null) {
           try {
             match = pickBetterSetter(match, setter, propName);
@@ -230,9 +250,10 @@ public class Reflector {
           }
         }
       }
+      //如果遍历结束后还是没有找到setter方法则抛出异常，通过上文代码可以知道此时exception一定不为null
       if (match == null) {
         throw exception;
-      } else {
+      } else {// 如果有匹配的setter方法则添加到setter映射表中
         addSetMethod(propName, match);
       }
     }
@@ -262,8 +283,10 @@ public class Reflector {
     }
   }
 
+  //将Type转换为Class
   private Class<?> typeToClass(Type src) {
     Class<?> result = null;
+    //如果src是Class的实例则返回class
     if (src instanceof Class) {
       result = (Class<?>) src;
     } else if (src instanceof ParameterizedType) {
@@ -284,8 +307,11 @@ public class Reflector {
   }
 
   private void addFields(Class<?> clazz) {
+    //获取该类中所声明的所有属性
     Field[] fields = clazz.getDeclaredFields();
+    //遍历属性
     for (Field field : fields) {
+      //如果可以访问私有方法则将accessible设置为true
       if (canAccessPrivateMethods()) {
         try {
           field.setAccessible(true);
@@ -293,27 +319,31 @@ public class Reflector {
           // Ignored. This is only a final precaution, nothing we can do.
         }
       }
+      //如果属性是可以访问的
       if (field.isAccessible()) {
+        //如果setter方法表中不存在这个属性
         if (!setMethods.containsKey(field.getName())) {
-          // issue #379 - removed the check for final because JDK 1.5 allows
-          // modification of final fields through reflection (JSR-133). (JGB)
-          // pr #16 - final static can only be set by the classloader
+
           int modifiers = field.getModifiers();
+          //如果这个方法不是final的静态方法就将该方法添加到setField中
           if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
             addSetField(field);
           }
         }
+        //如果这个属性在getter方法映射表中不存在则将添加到getField中
         if (!getMethods.containsKey(field.getName())) {
           addGetField(field);
         }
       }
     }
+    //如果还有父类方法则递归执行
     if (clazz.getSuperclass() != null) {
       addFields(clazz.getSuperclass());
     }
   }
 
   private void addSetField(Field field) {
+    //如果是有效属性，则对该属性创建一个SetFieldInvoker对象保存到Setter方法映射表中
     if (isValidPropertyName(field.getName())) {
       setMethods.put(field.getName(), new SetFieldInvoker(field));
       Type fieldType = TypeParameterResolver.resolveFieldType(field, type);
@@ -322,6 +352,7 @@ public class Reflector {
   }
 
   private void addGetField(Field field) {
+    //如果是有效属性，则对该属性创建一个GetFieldInvoker对象保存到Setter方法映射表中
     if (isValidPropertyName(field.getName())) {
       getMethods.put(field.getName(), new GetFieldInvoker(field));
       Type fieldType = TypeParameterResolver.resolveFieldType(field, type);
