@@ -19,14 +19,13 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * MyBatis uses an ObjectFactory to create all needed new Objects.
  * MyBatis 使用ObjectFactory 去创建所有需要的新对象
  * @author Clinton Begin
  */
 public interface ObjectFactory {
 
   /**
-   * Sets configuration properties.
+   * 设置配置属性
    * @param properties configuration properties
    */
   void setProperties(Properties properties);
@@ -37,11 +36,7 @@ public interface ObjectFactory {
   <T> T create(Class<T> type);
 
   /**
-   * Creates a new object with the specified constructor and params.
-   * @param type Object type
-   * @param constructorArgTypes Constructor argument types
-   * @param constructorArgs Constructor argument values
-   * @return
+   * 根据给定的构造参数类型，以及构造参数创建对象
    */
   <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs);
   

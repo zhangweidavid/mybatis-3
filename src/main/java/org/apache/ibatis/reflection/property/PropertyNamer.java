@@ -28,7 +28,9 @@ public final class PropertyNamer {
     // Prevent Instantiation of Static Class
   }
 
+  //方法名称到属性名称的处理
   public static String methodToProperty(String name) {
+      //如果方法名称是is开头，如isXXX则属性名称就是XXX,如果是getXXX,setXXX则属性名称是XXX
     if (name.startsWith("is")) {
       name = name.substring(2);
     } else if (name.startsWith("get") || name.startsWith("set")) {

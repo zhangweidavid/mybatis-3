@@ -27,7 +27,7 @@ import org.apache.ibatis.reflection.invoker.MethodInvoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
- * @author Clinton Begin
+ * 类的元数据，在该类中通过Reflector获取类的元数据
  */
 public class MetaClass {
   //反射工厂
@@ -38,6 +38,7 @@ public class MetaClass {
 
   private MetaClass(Class<?> type, ReflectorFactory reflectorFactory) {
     this.reflectorFactory = reflectorFactory;
+    //从反射器工厂中获取指定类型的反射器
     this.reflector = reflectorFactory.findForClass(type);
   }
 
@@ -45,6 +46,9 @@ public class MetaClass {
     return new MetaClass(type, reflectorFactory);
   }
 
+  /**
+   * 根据属性名称获取属性类型的MetaClass
+   */
   public MetaClass metaClassForProperty(String name) {
     //从反射器中获取属性的类型
     Class<?> propType = reflector.getGetterType(name);
@@ -52,6 +56,7 @@ public class MetaClass {
     return MetaClass.forClass(propType, reflectorFactory);
   }
 
+  //查找属性，根据属性
   public String findProperty(String name) {
     StringBuilder prop = buildProperty(name, new StringBuilder());
     return prop.length() > 0 ? prop.toString() : null;
@@ -136,6 +141,7 @@ public class MetaClass {
     return null;
   }
 
+  //判断指定的属性是否存在setter方法
   public boolean hasSetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -149,7 +155,7 @@ public class MetaClass {
       return reflector.hasSetter(prop.getName());
     }
   }
-
+  //判断指定的属性是否存在getter方法
   public boolean hasGetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -168,22 +174,28 @@ public class MetaClass {
   public Invoker getGetInvoker(String name) {
     return reflector.getGetInvoker(name);
   }
-
+  //获取指定属性的setter的invoker对象
   public Invoker getSetInvoker(String name) {
     return reflector.getSetInvoker(name);
   }
 
   private StringBuilder buildProperty(String name, StringBuilder builder) {
+    //对指定对属性名称创建属性标记器
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    //如果指定了子属性
     if (prop.hasNext()) {
+      //获取第一级属性名称  x.y 此时的值为x
       String propertyName = reflector.findPropertyName(prop.getName());
+       //如果propertyName不为null
       if (propertyName != null) {
         builder.append(propertyName);
         builder.append(".");
         MetaClass metaProp = metaClassForProperty(propertyName);
+        //递归调用
         metaProp.buildProperty(prop.getChildren(), builder);
       }
     } else {
+      //如果没有子属性，则可以直接获取当前指定属性名的属性名
       String propertyName = reflector.findPropertyName(name);
       if (propertyName != null) {
         builder.append(propertyName);
@@ -192,6 +204,7 @@ public class MetaClass {
     return builder;
   }
 
+  //是否存在默认构造方法
   public boolean hasDefaultConstructor() {
     return reflector.hasDefaultConstructor();
   }

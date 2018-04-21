@@ -18,7 +18,7 @@ package org.apache.ibatis.reflection.property;
 import java.lang.reflect.Field;
 
 /**
- * @author Clinton Begin
+ * 属性复制器
  */
 public final class PropertyCopier {
 
@@ -28,17 +28,21 @@ public final class PropertyCopier {
 
   public static void copyBeanProperties(Class<?> type, Object sourceBean, Object destinationBean) {
     Class<?> parent = type;
+    //递归处理
     while (parent != null) {
-      //获取指声明的属性
+      //获取声明的属性
       final Field[] fields = parent.getDeclaredFields();
+      //遍历属性
       for(Field field : fields) {
         try {
           field.setAccessible(true);
+          //将source属性值赋值到destinationBean中
           field.set(destinationBean, field.get(sourceBean));
         } catch (Exception e) {
           e.printStackTrace();
         }
       }
+      //获取当前对象的父类
       parent = parent.getSuperclass();
     }
   }

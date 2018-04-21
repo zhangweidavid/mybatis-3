@@ -28,6 +28,7 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
 public abstract class BaseWrapper implements ObjectWrapper {
   //反射调用使用的无参
   protected static final Object[] NO_ARGUMENTS = new Object[0];
+  //类的元数据
   protected final MetaObject metaObject;
 
   protected BaseWrapper(MetaObject metaObject) {
@@ -42,12 +43,14 @@ public abstract class BaseWrapper implements ObjectWrapper {
     }
   }
 
+  //从Map，List或者数组中获取指定索引的值，如果是Map则索引为key
   protected Object getCollectionValue(PropertyTokenizer prop, Object collection) {
+    //如果是Map类型则根据属性标记器中的属性索引获取值
     if (collection instanceof Map) {
       return ((Map) collection).get(prop.getIndex());
-    } else {
+    } else {//如果不是Map类型则 索引因该是数字
       int i = Integer.parseInt(prop.getIndex());
-      if (collection instanceof List) {
+      if (collection instanceof List) {//如果是List ，如果不是list则必须是数组否则抛出异常
         return ((List) collection).get(i);
       } else if (collection instanceof Object[]) {
         return ((Object[]) collection)[i];
@@ -72,7 +75,7 @@ public abstract class BaseWrapper implements ObjectWrapper {
       }
     }
   }
-
+  //向Map,List或数组中添加值
   protected void setCollectionValue(PropertyTokenizer prop, Object collection, Object value) {
     if (collection instanceof Map) {
       ((Map) collection).put(prop.getIndex(), value);

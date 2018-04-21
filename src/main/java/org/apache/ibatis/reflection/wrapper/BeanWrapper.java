@@ -26,15 +26,14 @@ import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.invoker.Invoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
-/**
- * @author Clinton Begin
- */
+//Bean包装器
 public class BeanWrapper extends BaseWrapper {
 //原始对象
   private final Object object;
-  //
+  //类的元数据
   private final MetaClass metaClass;
 
+  //构造方法
   public BeanWrapper(MetaObject metaObject, Object object) {
     super(metaObject);
     this.object = object;
