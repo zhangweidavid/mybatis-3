@@ -214,13 +214,20 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void cacheElement(XNode context) throws Exception {
     if (context != null) {
+      //获取配置的type值，默认值为PERPETUAL
       String type = context.getStringAttribute("type", "PERPETUAL");
+      //获取type的class
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
+      //获取配置过期策略，默认值为LRU
       String eviction = context.getStringAttribute("eviction", "LRU");
       Class<? extends Cache> evictionClass = typeAliasRegistry.resolveAlias(eviction);
+      //获取配置的刷新间隔
       Long flushInterval = context.getLongAttribute("flushInterval");
+      //获取配置的缓存大小
       Integer size = context.getIntAttribute("size");
+      //是否配置了只读，默认为false
       boolean readWrite = !context.getBooleanAttribute("readOnly", false);
+      //是否配置了阻塞，默认为false
       boolean blocking = context.getBooleanAttribute("blocking", false);
       Properties props = context.getChildrenAsProperties();
       builderAssistant.useNewCache(typeClass, evictionClass, flushInterval, size, readWrite, blocking, props);

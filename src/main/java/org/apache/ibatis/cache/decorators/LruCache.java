@@ -29,7 +29,9 @@ import org.apache.ibatis.cache.Cache;
 public class LruCache implements Cache {
 
   private final Cache delegate;
+  //key映射表
   private Map<Object, Object> keyMap;
+  //最老的key
   private Object eldestKey;
 
   public LruCache(Cache delegate) {
@@ -48,13 +50,17 @@ public class LruCache implements Cache {
   }
 
   public void setSize(final int size) {
+    //使用LinedListHashMap实现LRU， accessOrder=true 会按照访问顺序排序，最近访问的放在最前，最早访问的放在后面
     keyMap = new LinkedHashMap<Object, Object>(size, .75F, true) {
       private static final long serialVersionUID = 4267176411845948333L;
 
+
       @Override
       protected boolean removeEldestEntry(Map.Entry<Object, Object> eldest) {
+        //如果当前大小已经超过1024则删除最老元素
         boolean tooBig = size() > size;
         if (tooBig) {
+          //将最老元素赋值给eldestKey
           eldestKey = eldest.getKey();
         }
         return tooBig;
@@ -70,7 +76,8 @@ public class LruCache implements Cache {
 
   @Override
   public Object getObject(Object key) {
-    keyMap.get(key); //touch
+    //每次反问都会触发keyMap的排序
+    keyMap.get(key);
     return delegate.getObject(key);
   }
 
@@ -91,7 +98,9 @@ public class LruCache implements Cache {
   }
 
   private void cycleKeyList(Object key) {
+    //将当前key放入keyMap
     keyMap.put(key, key);
+    //如果最老的key不为null则清除最老的key的缓存
     if (eldestKey != null) {
       delegate.removeObject(eldestKey);
       eldestKey = null;
