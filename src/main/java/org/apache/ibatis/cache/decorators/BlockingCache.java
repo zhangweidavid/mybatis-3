@@ -25,19 +25,19 @@ import org.apache.ibatis.cache.Cache;
 import org.apache.ibatis.cache.CacheException;
 
 /**
- * Simple blocking decorator 
- * 
- * Simple and inefficient version of EhCache's BlockingCache decorator.
- * It sets a lock over a cache key when the element is not found in cache.
- * This way, other threads will wait until this element is filled instead of hitting the database.
- * 
+ * 简单阻塞装饰器
+ *
+ * 当前缓存中不存在时对缓存缓存的key加锁，其它线程就只能一直等到这个元素保存到缓存中
+ * 由于对每个key都保存了锁对象，如果在大量查询中使用可能存在OOM都风险
  * @author Eduardo Macarron
  *
  */
 public class BlockingCache implements Cache {
-
+  //超时时间
   private long timeout;
+  //委派代表
   private final Cache delegate;
+  //缓存key和锁的映射关系
   private final ConcurrentHashMap<Object, ReentrantLock> locks;
 
   public BlockingCache(Cache delegate) {
@@ -45,6 +45,7 @@ public class BlockingCache implements Cache {
     this.locks = new ConcurrentHashMap<Object, ReentrantLock>();
   }
 
+  //获取ID，直接委派给delegate处理
   @Override
   public String getId() {
     return delegate.getId();
@@ -55,6 +56,8 @@ public class BlockingCache implements Cache {
     return delegate.getSize();
   }
 
+  //放置缓存，结束后释放锁； 注意在方缓存前是没有加锁的
+  //该处设置是和获取缓存有很大关系
   @Override
   public void putObject(Object key, Object value) {
     try {
@@ -66,8 +69,12 @@ public class BlockingCache implements Cache {
 
   @Override
   public Object getObject(Object key) {
+    //获取锁
     acquireLock(key);
+    //获取缓存数据
     Object value = delegate.getObject(key);
+    //如果缓存数据存在则释放锁，否则返回，注意，此时锁没有释放；下一个线程获取的时候是没有办法
+    //获取锁，只能等待；记住 put结束的时候会释放锁，这里就是为什么put之前没有获取锁，但是结束后要释放锁的原因
     if (value != null) {
       releaseLock(key);
     }        
