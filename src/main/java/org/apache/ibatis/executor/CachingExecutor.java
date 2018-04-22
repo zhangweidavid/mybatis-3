@@ -37,12 +37,14 @@ import org.apache.ibatis.transaction.Transaction;
  * @author Eduardo Macarron
  */
 public class CachingExecutor implements Executor {
-
+  //委托代理
   private final Executor delegate;
+  //事务缓存管理
   private final TransactionalCacheManager tcm = new TransactionalCacheManager();
 
   public CachingExecutor(Executor delegate) {
     this.delegate = delegate;
+    //使用CachingExecutor对传入对委托代理进行包装
     delegate.setExecutorWrapper(this);
   }
 
@@ -54,13 +56,13 @@ public class CachingExecutor implements Executor {
   @Override
   public void close(boolean forceRollback) {
     try {
-      //issues #499, #524 and #573
+      //如果是强迫回滚，则对事务缓存执行回滚，否则对事务缓存执行提交
       if (forceRollback) { 
         tcm.rollback();
       } else {
         tcm.commit();
       }
-    } finally {
+    } finally {//最终调用委托代理执行该请求
       delegate.close(forceRollback);
     }
   }
@@ -72,6 +74,7 @@ public class CachingExecutor implements Executor {
 
   @Override
   public int update(MappedStatement ms, Object parameterObject) throws SQLException {
+    //如果需要刷新缓存则刷新缓存
     flushCacheIfRequired(ms);
     return delegate.update(ms, parameterObject);
   }
@@ -92,13 +95,19 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
+    //获取ms的缓存
     Cache cache = ms.getCache();
+    //如果配置了缓存
     if (cache != null) {
+      //如果需要刷新则刷新缓存
       flushCacheIfRequired(ms);
+      //如果ms使用缓存且resultHandler为null
       if (ms.isUseCache() && resultHandler == null) {
+        //确认没有输出参数
         ensureNoOutParams(ms, boundSql);
-        @SuppressWarnings("unchecked")
+        //从事务缓存获取数据
         List<E> list = (List<E>) tcm.getObject(cache, key);
+        //如果缓存中数据为null 则查询并放入事务缓存
         if (list == null) {
           list = delegate.<E> query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
           tcm.putObject(cache, key, list); // issue #578 and #116
@@ -106,6 +115,7 @@ public class CachingExecutor implements Executor {
         return list;
       }
     }
+    //没有配置缓存
     return delegate.<E> query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 
@@ -114,12 +124,14 @@ public class CachingExecutor implements Executor {
     return delegate.flushStatements();
   }
 
+  //提交事务时也提交事务缓存
   @Override
   public void commit(boolean required) throws SQLException {
     delegate.commit(required);
     tcm.commit();
   }
 
+  //回滚的时候如果required为true则回滚事务缓存
   @Override
   public void rollback(boolean required) throws SQLException {
     try {
@@ -162,7 +174,9 @@ public class CachingExecutor implements Executor {
   }
 
   private void flushCacheIfRequired(MappedStatement ms) {
+    //获取当前MappedStatement的缓存
     Cache cache = ms.getCache();
+    //如果MappedStatement配置了缓存，且flushCacheRequired=true则清空事务缓存
     if (cache != null && ms.isFlushCacheRequired()) {      
       tcm.clear(cache);
     }

@@ -28,6 +28,7 @@ public class TransactionalCacheManager {
   private final Map<Cache, TransactionalCache> transactionalCaches = new HashMap<Cache, TransactionalCache>();
 
   public void clear(Cache cache) {
+    //获取当前事务缓存，并清空
     getTransactionalCache(cache).clear();
   }
 
@@ -52,11 +53,14 @@ public class TransactionalCacheManager {
   }
 
   private TransactionalCache getTransactionalCache(Cache cache) {
+    //从事务缓存的缓存中获取当前缓存的事务缓存
     TransactionalCache txCache = transactionalCaches.get(cache);
+    //如果当前缓存没有事务缓存，则对当前缓存使用事务缓存装饰一下，并存入缓存中
     if (txCache == null) {
       txCache = new TransactionalCache(cache);
       transactionalCaches.put(cache, txCache);
     }
+    //返回当前缓存对事务缓存
     return txCache;
   }
 
