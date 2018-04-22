@@ -31,6 +31,7 @@ public class MapperProxyFactory<T> {
   //方法缓存
   private final Map<Method, MapperMethod> methodCache = new ConcurrentHashMap<Method, MapperMethod>();
 
+  //构造方法
   public MapperProxyFactory(Class<T> mapperInterface) {
     this.mapperInterface = mapperInterface;
   }

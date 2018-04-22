@@ -34,6 +34,7 @@ import org.apache.ibatis.session.Configuration;
 public final class MappedStatement {
   //MappedStatement所处的文件
   private String resource;
+  //配置信息
   private Configuration configuration;
   //stementId
   private String id;

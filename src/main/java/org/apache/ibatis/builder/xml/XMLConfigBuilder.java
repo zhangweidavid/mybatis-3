@@ -420,13 +420,20 @@ public class XMLConfigBuilder extends BaseBuilder {
           String mapperPackage = child.getStringAttribute("name");
           configuration.addMappers(mapperPackage);
         } else {
+          //获取mapper元素中的resource属性
           String resource = child.getStringAttribute("resource");
+          //获取mapper元素中的url属性
           String url = child.getStringAttribute("url");
+          //获取mapper元素中的class属性，如果基于注解的配置的mapper 配置的就是class
           String mapperClass = child.getStringAttribute("class");
+          //对于resource,url,mapperClass 优先使用resource,其次是url最后是class
           if (resource != null && url == null && mapperClass == null) {
+            //创建异常上下文
             ErrorContext.instance().resource(resource);
             InputStream inputStream = Resources.getResourceAsStream(resource);
+            //创建XMLMapperBuilder
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
+            //解析XML
             mapperParser.parse();
           } else if (resource == null && url != null && mapperClass == null) {
             ErrorContext.instance().resource(url);
@@ -434,7 +441,9 @@ public class XMLConfigBuilder extends BaseBuilder {
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
             mapperParser.parse();
           } else if (resource == null && url == null && mapperClass != null) {
+            //获取mapper的接口
             Class<?> mapperInterface = Resources.classForName(mapperClass);
+            //将该接口注册到已知mapper
             configuration.addMapper(mapperInterface);
           } else {
             throw new BuilderException("A mapper element may only specify a url, resource or class, but not more than one.");
