@@ -121,16 +121,23 @@ public class CacheBuilder {
       if (size != null && metaCache.hasSetter("size")) {
         metaCache.setValue("size", size);
       }
+
       if (clearInterval != null) {
+        //在cache基础上加上ScheduledCache装饰器
         cache = new ScheduledCache(cache);
         ((ScheduledCache) cache).setClearInterval(clearInterval);
       }
+      //如果配置只读则增加序列化功能
       if (readWrite) {
+        //增加序列化装饰器
         cache = new SerializedCache(cache);
       }
+      //增加日志装饰器
       cache = new LoggingCache(cache);
+      //增加同步装饰器
       cache = new SynchronizedCache(cache);
       if (blocking) {
+        //增加阻塞读装饰器
         cache = new BlockingCache(cache);
       }
       return cache;

@@ -30,7 +30,7 @@ import org.apache.ibatis.cache.CacheException;
 import org.apache.ibatis.io.Resources;
 
 /**
- * @author Clinton Begin
+ * 序列化缓存
  */
 public class SerializedCache implements Cache {
 
@@ -50,8 +50,10 @@ public class SerializedCache implements Cache {
     return delegate.getSize();
   }
 
+  //将数据添加到缓存对时候对数据进行序列化保存
   @Override
   public void putObject(Object key, Object object) {
+    //如果对象为null或者实现了Serializable接口的对象需要进行序列化，否则抛出异常
     if (object == null || object instanceof Serializable) {
       delegate.putObject(key, serialize((Serializable) object));
     } else {
@@ -59,9 +61,12 @@ public class SerializedCache implements Cache {
     }
   }
 
+  //从缓存中获取数据对数据进行一次反序列化
   @Override
   public Object getObject(Object key) {
+    //从缓存中获取对象
     Object object = delegate.getObject(key);
+    //如果对象为null则直接返回null,否则返回反序列化后对象
     return object == null ? null : deserialize((byte[]) object);
   }
 
@@ -90,6 +95,7 @@ public class SerializedCache implements Cache {
     return delegate.equals(obj);
   }
 
+  //对数据进行序列化
   private byte[] serialize(Serializable value) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -102,7 +108,7 @@ public class SerializedCache implements Cache {
       throw new CacheException("Error serializing object.  Cause: " + e, e);
     }
   }
-
+  //对数据进行反序列化
   private Serializable deserialize(byte[] value) {
     Serializable result;
     try {

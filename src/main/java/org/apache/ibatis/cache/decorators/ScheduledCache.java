@@ -20,12 +20,17 @@ import java.util.concurrent.locks.ReadWriteLock;
 import org.apache.ibatis.cache.Cache;
 
 /**
- * @author Clinton Begin
+ * 定期清空缓存的装饰器，其清空缓存的策略使用的是懒惰清空方式
+ * 在 getSize,putObject, getObject removeObject的时候会触发清空检查
+ *
  */
 public class ScheduledCache implements Cache {
 
   private final Cache delegate;
+  //刷新间隔
   protected long clearInterval;
+
+  //最后一次清空缓存时间
   protected long lastClear;
 
   public ScheduledCache(Cache delegate) {
@@ -88,6 +93,7 @@ public class ScheduledCache implements Cache {
   }
 
   private boolean clearWhenStale() {
+    //如果当前时间减去最后一次刷新时间大于刷新间隔则需要晴空缓存
     if (System.currentTimeMillis() - lastClear > clearInterval) {
       clear();
       return true;
