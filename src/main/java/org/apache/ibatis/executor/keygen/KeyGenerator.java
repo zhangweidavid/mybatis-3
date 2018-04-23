@@ -21,12 +21,13 @@ import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 
 /**
- * @author Clinton Begin
+ * key生成器接口
  */
 public interface KeyGenerator {
-
+  //在执行主SQL前执行selectKey
   void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter);
 
+  //在主SQL执行后执行selectkey
   void processAfter(Executor executor, MappedStatement ms, Statement stmt, Object parameter);
 
 }

@@ -60,7 +60,9 @@ public class PreparedStatementHandler extends BaseStatementHandler {
         ps.execute();
         int rows = ps.getUpdateCount();
         Object parameterObject = boundSql.getParameterObject();
+        //获取当前Statemnet配置的SelectKey
         KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
+        //执行processAfter
         keyGenerator.processAfter(executor, mappedStatement, ps, parameterObject);
         return rows;
     }

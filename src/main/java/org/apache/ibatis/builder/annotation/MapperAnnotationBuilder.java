@@ -119,6 +119,7 @@ public class MapperAnnotationBuilder {
   }
 
   public void parse() {
+    //如：interface org.apache.ibatis.submitted.selectkey.AnnotatedMapper
     String resource = type.toString();
     //判断该资源是否已经注册
     if (!configuration.isResourceLoaded(resource)) {
@@ -126,13 +127,13 @@ public class MapperAnnotationBuilder {
       loadXmlResource();
       //将该资源名称添加到已经注册集合中
       configuration.addLoadedResource(resource);
-      //设置nameSpace
+      //设置nameSpace 接口的完整路径名称 如：org.apache.ibatis.submitted.selectkey.AnnotatedMapper
       assistant.setCurrentNamespace(type.getName());
       //解析cache
       parseCache();
       //解析cacheRef
       parseCacheRef();
-      //获取
+      //获取接口下所有方法
       Method[] methods = type.getMethods();
       for (Method method : methods) {
         try {
@@ -347,18 +348,23 @@ public class MapperAnnotationBuilder {
       boolean useCache = isSelect;
 
       KeyGenerator keyGenerator;
+      //默认keyProperty 为id
       String keyProperty = "id";
       String keyColumn = null;
       //如果是插入或更新
       if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
         //获取SelectKey注解
         SelectKey selectKey = method.getAnnotation(SelectKey.class);
+        //如果存在 @SelectKey注解
         if (selectKey != null) {
+          //处理@SelectKey
           keyGenerator = handleSelectKeyAnnotation(selectKey, mappedStatementId, getParameterType(method), languageDriver);
+          //将@SelectKey配置id赋值给keyProperty
           keyProperty = selectKey.keyProperty();
-        } else if (options == null) {
+        } else if (options == null) {//如果没有@Options 则根据configuration配置的useGeneratedKeys的值决定KeyGenerator
           keyGenerator = configuration.isUseGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
-        } else {
+        } else {// 不存在@SelectKey 但是存在@Options
+          //如果设置useGeneratedKeys=true(默认值为false)
           keyGenerator = options.useGeneratedKeys() ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
           keyProperty = options.keyProperty();
           keyColumn = options.keyColumn();
@@ -523,7 +529,7 @@ public class MapperAnnotationBuilder {
         }
         //获取注解
         Annotation sqlAnnotation = method.getAnnotation(sqlAnnotationType);
-        //获取注解配置的值
+        //获取注解配置的value值，该处通过反射的方式调用，因为这些注解都存在value方法
         final String[] strings = (String[]) sqlAnnotation.getClass().getMethod("value").invoke(sqlAnnotation);
         //根据配置的数据创建SqlSource
         return buildSqlSourceFromStrings(strings, parameterType, languageDriver);
@@ -699,15 +705,22 @@ public class MapperAnnotationBuilder {
     return args == null ? new Arg[0] : args.value();
   }
 
+  //处理@SelectKey注解
   private KeyGenerator handleSelectKeyAnnotation(SelectKey selectKeyAnnotation, String baseStatementId, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+    //创建ID
     String id = baseStatementId + SelectKeyGenerator.SELECT_KEY_SUFFIX;
+    //获取@SelectKey配置的返回类型
     Class<?> resultTypeClass = selectKeyAnnotation.resultType();
+    //获取StatementType默认值为 StatementType.PREPARED
     StatementType statementType = selectKeyAnnotation.statementType();
+    //获取keyProperty
     String keyProperty = selectKeyAnnotation.keyProperty();
+    //获取keyColumn
     String keyColumn = selectKeyAnnotation.keyColumn();
+    //是否在主SQL之前执行
     boolean executeBefore = selectKeyAnnotation.before();
 
-    // defaults
+    //默认值
     boolean useCache = false;
     KeyGenerator keyGenerator = NoKeyGenerator.INSTANCE;
     Integer fetchSize = null;
@@ -716,8 +729,9 @@ public class MapperAnnotationBuilder {
     String parameterMap = null;
     String resultMap = null;
     ResultSetType resultSetTypeEnum = null;
-
+    //根据配置创建SqlSource
     SqlSource sqlSource = buildSqlSourceFromStrings(selectKeyAnnotation.statement(), parameterTypeClass, languageDriver);
+    //指定SQL类型为Select
     SqlCommandType sqlCommandType = SqlCommandType.SELECT;
 
     assistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType, fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass, resultSetTypeEnum,

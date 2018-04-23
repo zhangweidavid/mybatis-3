@@ -43,6 +43,7 @@ public class SelectKeyGenerator implements KeyGenerator {
 
   @Override
   public void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
+    //是否执行前执行，如果不是就不执行
     if (executeBefore) {
       processGeneratedKeys(executor, ms, parameter);
     }
@@ -50,6 +51,7 @@ public class SelectKeyGenerator implements KeyGenerator {
 
   @Override
   public void processAfter(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
+    //如果executeBefore配置为false则执行
     if (!executeBefore) {
       processGeneratedKeys(executor, ms, parameter);
     }
@@ -57,30 +59,38 @@ public class SelectKeyGenerator implements KeyGenerator {
 
   private void processGeneratedKeys(Executor executor, MappedStatement ms, Object parameter) {
     try {
+      //如果parameter不为null同时keyStatement不为null且keyStatement 指定了keyProperties
       if (parameter != null && keyStatement != null && keyStatement.getKeyProperties() != null) {
+        //获取keyProperties
         String[] keyProperties = keyStatement.getKeyProperties();
+        //获取配置信息
         final Configuration configuration = ms.getConfiguration();
+        //获取参数对象元数据
         final MetaObject metaParam = configuration.newMetaObject(parameter);
+        //其实已经判断过了
         if (keyProperties != null) {
-          // Do not close keyExecutor.
-          // The transaction will be closed by parent executor.
+          //新建keyExecutor
           Executor keyExecutor = configuration.newExecutor(executor.getTransaction(), ExecutorType.SIMPLE);
+          //执行查询
           List<Object> values = keyExecutor.query(keyStatement, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER);
+          //如果查询结果为0个则抛出异常
           if (values.size() == 0) {
             throw new ExecutorException("SelectKey returned no data.");            
-          } else if (values.size() > 1) {
+          } else if (values.size() > 1) {//查询的结果个数多余1个则抛出异常
             throw new ExecutorException("SelectKey returned more than one value.");
-          } else {
+          } else {//只返了一个结果值
             MetaObject metaResult = configuration.newMetaObject(values.get(0));
+            //如果keyProperty个数只有1个
             if (keyProperties.length == 1) {
+              //如果查询结果对象存在这个属性的getter方法
               if (metaResult.hasGetter(keyProperties[0])) {
+                //将属性值设置到param中
                 setValue(metaParam, keyProperties[0], metaResult.getValue(keyProperties[0]));
               } else {
-                // no getter for the property - maybe just a single value object
-                // so try that
+                //如果没有getter方法就将当前值设置到属性中
                 setValue(metaParam, keyProperties[0], values.get(0));
               }
-            } else {
+            } else {//处理指定多个key属性场景
               handleMultipleProperties(keyProperties, metaParam, metaResult);
             }
           }
@@ -95,17 +105,20 @@ public class SelectKeyGenerator implements KeyGenerator {
 
   private void handleMultipleProperties(String[] keyProperties,
       MetaObject metaParam, MetaObject metaResult) {
+    //获取所有key  column
     String[] keyColumns = keyStatement.getKeyColumns();
-      
+      //如果key column不存在
     if (keyColumns == null || keyColumns.length == 0) {
-      // no key columns specified, just use the property names
+      //没有指定key column则直接使用配置到 key property
       for (String keyProperty : keyProperties) {
         setValue(metaParam, keyProperty, metaResult.getValue(keyProperty));
       }
     } else {
+      //存在key column 但是数量不一致
       if (keyColumns.length != keyProperties.length) {
         throw new ExecutorException("If SelectKey has key columns, the number must match the number of key properties.");
       }
+      //数量一致，要求keyColumn 和keyProperty一一对应
       for (int i = 0; i < keyProperties.length; i++) {
         setValue(metaParam, keyProperties[i], metaResult.getValue(keyColumns[i]));
       }
