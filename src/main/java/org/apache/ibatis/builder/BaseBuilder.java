@@ -44,11 +44,12 @@ public abstract class BaseBuilder {
     this.typeAliasRegistry = this.configuration.getTypeAliasRegistry();
     this.typeHandlerRegistry = this.configuration.getTypeHandlerRegistry();
   }
-
+  //获取配置信息
   public Configuration getConfiguration() {
     return configuration;
   }
 
+  //解析正则表达式
   protected Pattern parseExpression(String regex, String defaultValue) {
     return Pattern.compile(regex == null ? defaultValue : regex);
   }
@@ -66,6 +67,7 @@ public abstract class BaseBuilder {
     return new HashSet<String>(Arrays.asList(value.split(",")));
   }
 
+  //解析jdbcType别名,根据别名获取对应的JdbcType
   protected JdbcType resolveJdbcType(String alias) {
     if (alias == null) {
       return null;
@@ -76,7 +78,7 @@ public abstract class BaseBuilder {
       throw new BuilderException("Error resolving JdbcType. Cause: " + e, e);
     }
   }
-
+  //根据别名获取对应的ResultSetType
   protected ResultSetType resolveResultSetType(String alias) {
     if (alias == null) {
       return null;
@@ -88,6 +90,7 @@ public abstract class BaseBuilder {
     }
   }
 
+  //根据别名获取对应的ParameterMode
   protected ParameterMode resolveParameterMode(String alias) {
     if (alias == null) {
       return null;
@@ -99,6 +102,7 @@ public abstract class BaseBuilder {
     }
   }
 
+  //根据别名创建对象
   protected Object createInstance(String alias) {
     Class<?> clazz = resolveClass(alias);
     if (clazz == null) {
@@ -110,12 +114,14 @@ public abstract class BaseBuilder {
       throw new BuilderException("Error creating instance. Cause: " + e, e);
     }
   }
-
+  //如果是别名则返回别名对应的类，否则就返回配置的类
   protected Class<?> resolveClass(String alias) {
+    //如果别名为null则返回null
     if (alias == null) {
       return null;
     }
     try {
+      //处理别名
       return resolveAlias(alias);
     } catch (Exception e) {
       throw new BuilderException("Error resolving class. Cause: " + e, e);

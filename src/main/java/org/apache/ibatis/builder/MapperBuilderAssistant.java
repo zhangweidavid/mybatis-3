@@ -50,7 +50,7 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 /**
- * @author Clinton Begin
+ * Mapper构造器辅助类
  */
 public class MapperBuilderAssistant extends BaseBuilder {
 
@@ -104,19 +104,22 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public Cache useCacheRef(String namespace) {
+    //如果namespace为null抛出异常
     if (namespace == null) {
       throw new BuilderException("cache-ref element requires a namespace attribute.");
     }
     try {
       unresolvedCacheRef = true;
+      //根据namespace从配置信息中获取缓存对象
       Cache cache = configuration.getCache(namespace);
+      //如果缓存对象为null则抛出IncompleteElementException 可能是因为引用的缓存还没有初始化外部会捕获这个异常，延后尝试完成初始化
       if (cache == null) {
         throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.");
       }
       currentCache = cache;
       unresolvedCacheRef = false;
       return cache;
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {//捕获IllegalArgumentExcption后抛出 IncompleteElementException
       throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.", e);
     }
   }
@@ -128,6 +131,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       boolean readWrite,
       boolean blocking,
       Properties props) {
+    //根据给定参数初始化缓存
     Cache cache = new CacheBuilder(currentNamespace)
         .implementation(valueOrDefault(typeClass, PerpetualCache.class))
         .addDecorator(valueOrDefault(evictionClass, LruCache.class))
@@ -137,6 +141,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         .blocking(blocking)
         .properties(props)
         .build();
+    //将缓存添加到配置数据中，可以根据缓存ID从配置数据中获取该缓存
     configuration.addCache(cache);
     currentCache = cache;
     return cache;

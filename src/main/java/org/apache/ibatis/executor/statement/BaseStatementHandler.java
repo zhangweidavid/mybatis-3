@@ -42,8 +42,11 @@ import org.apache.log4j.LogMF;
 public abstract class BaseStatementHandler implements StatementHandler {
 
   private static final Log log= LogFactory.getLog(BaseStatementHandler.class);
+  //配置信息
   protected final Configuration configuration;
+  //对象工厂
   protected final ObjectFactory objectFactory;
+
   protected final TypeHandlerRegistry typeHandlerRegistry;
   protected final ResultSetHandler resultSetHandler;
   protected final ParameterHandler parameterHandler;
@@ -63,7 +66,8 @@ public abstract class BaseStatementHandler implements StatementHandler {
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     this.objectFactory = configuration.getObjectFactory();
 
-    if (boundSql == null) { // issue #435, get the key before calculating the statement
+    //如果boundSql为null则需要先生成主键再生成boundSql
+    if (boundSql == null) {
       generateKeys(parameterObject);
       boundSql = mappedStatement.getBoundSql(parameterObject);
     }

@@ -214,12 +214,15 @@ public class ResolverUtil<T> {
    *        classes, e.g. {@code net.sourceforge.stripes}
    */
   public ResolverUtil<T> find(Test test, String packageName) {
+    //获取包路径
     String path = getPackagePath(packageName);
 
     try {
+      //获取包下的所有类
       List<String> children = VFS.getInstance().list(path);
       for (String child : children) {
         if (child.endsWith(".class")) {
+          //
           addIfMatching(test, child);
         }
       }
@@ -255,8 +258,9 @@ public class ResolverUtil<T> {
       if (log.isDebugEnabled()) {
         log.debug("Checking to see if class " + externalName + " matches criteria [" + test + "]");
       }
-
+      //获取该类
       Class<?> type = loader.loadClass(externalName);
+      //如果匹配则加入到matches中
       if (test.matches(type)) {
         matches.add((Class<T>) type);
       }

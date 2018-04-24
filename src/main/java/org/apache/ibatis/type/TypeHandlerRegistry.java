@@ -38,14 +38,15 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.reflection.Jdk;
 
 /**
- * @author Clinton Begin
- * @author Kazuki Shimizu
+ * 类型处理器注册机
  */
 public final class TypeHandlerRegistry {
-
+  //JdbcType与相应处理器的映射表
   private final Map<JdbcType, TypeHandler<?>> JDBC_TYPE_HANDLER_MAP = new EnumMap<JdbcType, TypeHandler<?>>(JdbcType.class);
   private final Map<Type, Map<JdbcType, TypeHandler<?>>> TYPE_HANDLER_MAP = new ConcurrentHashMap<Type, Map<JdbcType, TypeHandler<?>>>();
+  //未知类型处理器
   private final TypeHandler<Object> UNKNOWN_TYPE_HANDLER = new UnknownTypeHandler(this);
+
   private final Map<Class<?>, TypeHandler<?>> ALL_TYPE_HANDLERS_MAP = new HashMap<Class<?>, TypeHandler<?>>();
 
   private static final Map<JdbcType, TypeHandler<?>> NULL_TYPE_HANDLER_MAP = new HashMap<JdbcType, TypeHandler<?>>();
@@ -53,6 +54,7 @@ public final class TypeHandlerRegistry {
   private Class<? extends TypeHandler> defaultEnumTypeHandler = EnumTypeHandler.class;
 
   public TypeHandlerRegistry() {
+    //初始化时注册类型处理器
     register(Boolean.class, new BooleanTypeHandler());
     register(boolean.class, new BooleanTypeHandler());
     register(JdbcType.BOOLEAN, new BooleanTypeHandler());
@@ -328,8 +330,11 @@ public final class TypeHandlerRegistry {
   }
 
   private <T> void register(Type javaType, TypeHandler<? extends T> typeHandler) {
+    //获取类型处理器上的@MappedJdbcTypes注解
     MappedJdbcTypes mappedJdbcTypes = typeHandler.getClass().getAnnotation(MappedJdbcTypes.class);
+    //如果注解不为null
     if (mappedJdbcTypes != null) {
+      //遍历@MappedJdbcTypes配置的JdbcType
       for (JdbcType handledJdbcType : mappedJdbcTypes.value()) {
         register(javaType, handledJdbcType, typeHandler);
       }
@@ -353,11 +358,15 @@ public final class TypeHandlerRegistry {
 
   private void register(Type javaType, JdbcType jdbcType, TypeHandler<?> handler) {
     if (javaType != null) {
+      //获取javaType对应的JdbcType和TypeHandler映射表
       Map<JdbcType, TypeHandler<?>> map = TYPE_HANDLER_MAP.get(javaType);
+      //如果映射表为null
       if (map == null) {
+        //创建新的HashMap并放入 TYPE_HANDLER_MAP
         map = new HashMap<JdbcType, TypeHandler<?>>();
         TYPE_HANDLER_MAP.put(javaType, map);
       }
+      //映射表不为null,直接将该jdbcType和TypeHandler的映射关系保存到映射表中
       map.put(jdbcType, handler);
     }
     ALL_TYPE_HANDLERS_MAP.put(handler.getClass(), handler);
@@ -425,10 +434,13 @@ public final class TypeHandlerRegistry {
 
   public void register(String packageName) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<Class<?>>();
+    //找到所有匹配的类
     resolverUtil.find(new ResolverUtil.IsA(TypeHandler.class), packageName);
+    //获取该包下所有配置的类
     Set<Class<? extends Class<?>>> handlerSet = resolverUtil.getClasses();
+    //遍历
     for (Class<?> type : handlerSet) {
-      //Ignore inner classes and interfaces (including package-info.java) and abstract classes
+      //忽略匿名内部类，接口以及抽象方法
       if (!type.isAnonymousClass() && !type.isInterface() && !Modifier.isAbstract(type.getModifiers())) {
         register(type);
       }

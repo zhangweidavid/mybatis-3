@@ -33,7 +33,7 @@ import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.io.Resources;
 
 /**
- * @author Clinton Begin
+ * 类型别名注册机
  */
 public class TypeAliasRegistry {
 
@@ -104,15 +104,17 @@ public class TypeAliasRegistry {
   // throws class cast exception as well if types cannot be assigned
   public <T> Class<T> resolveAlias(String string) {
     try {
+      //如果别名为null则返回null
       if (string == null) {
         return null;
       }
       //转换为小写
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
+      //如果类型别名映射表中存在该别名，则直接获取该别名对应的类
       if (TYPE_ALIASES.containsKey(key)) {
         value = (Class<T>) TYPE_ALIASES.get(key);
-      } else {
+      } else {//别名类注册表中不存在，则当前string可能就是类的完整名
         value = (Class<T>) Resources.classForName(string);
       }
       return value;

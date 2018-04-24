@@ -21,12 +21,15 @@ import java.util.List;
 import org.apache.ibatis.session.Configuration;
 
 /**
- * @author Clinton Begin
+ * 参数映射对象
  */
 public class ParameterMap {
 
+  //参数映射ID
   private String id;
+  //参数类型
   private Class<?> type;
+  //参数对象中每个属性具体的映射关系
   private List<ParameterMapping> parameterMappings;
 
   private ParameterMap() {
@@ -46,7 +49,7 @@ public class ParameterMap {
     }
 
     public ParameterMap build() {
-      //lock down collections
+      //对属性映射关系创建一个不可变集合
       parameterMap.parameterMappings = Collections.unmodifiableList(parameterMap.parameterMappings);
       return parameterMap;
     }

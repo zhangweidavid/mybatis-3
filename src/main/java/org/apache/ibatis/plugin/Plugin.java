@@ -29,8 +29,9 @@ import org.apache.ibatis.reflection.ExceptionUtil;
  * 插件辅助工具类，通过该类对需要拦截的方法进行动态增强
  */
 public class Plugin implements InvocationHandler {
-
+  //目标对象
   private final Object target;
+  //拦截器
   private final Interceptor interceptor;
   private final Map<Class<?>, Set<Method>> signatureMap;
 
@@ -40,6 +41,7 @@ public class Plugin implements InvocationHandler {
     this.signatureMap = signatureMap;
   }
 
+  //对目标对象使用过interceptor进行增强
   public static Object wrap(Object target, Interceptor interceptor) {
     //获取拦截类，方法映射表
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
@@ -49,6 +51,7 @@ public class Plugin implements InvocationHandler {
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
     //如果有拦截接口，则创建代理对象对其进行增强
     if (interfaces.length > 0) {
+      //创建动态代理对象
       return Proxy.newProxyInstance(
           type.getClassLoader(),
           interfaces,
@@ -63,6 +66,7 @@ public class Plugin implements InvocationHandler {
       Set<Method> methods = signatureMap.get(method.getDeclaringClass());
       //如果当前方法需要被增强
       if (methods != null && methods.contains(method)) {
+        //调用目标对象对拦截器
         return interceptor.intercept(new Invocation(target, method, args));
       }
       //否则直接调用方法

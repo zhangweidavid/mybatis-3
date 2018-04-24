@@ -226,6 +226,7 @@ public class MapperAnnotationBuilder {
     if (cacheDomainRef != null) {
       //获取引用的类型
       Class<?> refType = cacheDomainRef.value();
+      //配置都引用名称
       String refName = cacheDomainRef.name();
       //如果引用类型和引用名称都为空则抛出异常
       if (refType == void.class && refName.isEmpty()) {

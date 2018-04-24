@@ -383,20 +383,29 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
     throw new BuilderException("Environment declaration requires a DataSourceFactory.");
   }
-
+  //处理typeHandlers节点
   private void typeHandlerElement(XNode parent) throws Exception {
     if (parent != null) {
+      //遍历所有配置的typeHandler
       for (XNode child : parent.getChildren()) {
+        //如果typeHandlers下配置了package
         if ("package".equals(child.getName())) {
+          //获取该包路径
           String typeHandlerPackage = child.getStringAttribute("name");
+          //注册该包路径
           typeHandlerRegistry.register(typeHandlerPackage);
-        } else {
+        } else {//不是<package>节点
+          //获取javaType, jdbcType,handler等属性
           String javaTypeName = child.getStringAttribute("javaType");
           String jdbcTypeName = child.getStringAttribute("jdbcType");
           String handlerTypeName = child.getStringAttribute("handler");
+          //获取javaType的类对象
           Class<?> javaTypeClass = resolveClass(javaTypeName);
+          //解析jdbcType
           JdbcType jdbcType = resolveJdbcType(jdbcTypeName);
+          //获取typeHandle类对象
           Class<?> typeHandlerClass = resolveClass(handlerTypeName);
+          //如果javaTypeClass不为null
           if (javaTypeClass != null) {
             if (jdbcType == null) {
               typeHandlerRegistry.register(javaTypeClass, typeHandlerClass);

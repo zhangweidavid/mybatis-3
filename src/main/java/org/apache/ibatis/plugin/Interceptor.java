@@ -18,12 +18,14 @@ package org.apache.ibatis.plugin;
 import java.util.Properties;
 
 /**
- * @author Clinton Begin
+ * 拦截器接口
  */
 public interface Interceptor {
 
+  //增强后方法调用入口
   Object intercept(Invocation invocation) throws Throwable;
 
+  //对target进行增强
   Object plugin(Object target);
 
   void setProperties(Properties properties);

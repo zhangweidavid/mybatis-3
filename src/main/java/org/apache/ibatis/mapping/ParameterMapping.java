@@ -33,8 +33,11 @@ public class ParameterMapping {
    * 数据库字段
    */
   private String property;
+  //参数模式，IN/OUT/INOUT
   private ParameterMode mode;
+  //参数类型
   private Class<?> javaType = Object.class;
+  //数据库中的数据类型
   private JdbcType jdbcType;
   /**
    * 精度
@@ -45,7 +48,9 @@ public class ParameterMapping {
    * 类型处理器
    */
   private TypeHandler<?> typeHandler;
+
   private String resultMapId;
+
   private String jdbcTypeName;
 
   /**表达式，目前还不支持**/
@@ -54,6 +59,7 @@ public class ParameterMapping {
   private ParameterMapping() {
   }
 
+  //ParameterMapping构造器
   public static class Builder {
     private ParameterMapping parameterMapping = new ParameterMapping();
 

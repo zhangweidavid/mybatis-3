@@ -22,9 +22,11 @@ import java.lang.reflect.Method;
  * @author Clinton Begin
  */
 public class Invocation {
-
+  //目标对象
   private final Object target;
+  //目标方法
   private final Method method;
+  //目标方法参数
   private final Object[] args;
 
   public Invocation(Object target, Method method, Object[] args) {
@@ -45,6 +47,7 @@ public class Invocation {
     return args;
   }
 
+  //调用目标对象对目标方法
   public Object proceed() throws InvocationTargetException, IllegalAccessException {
     return method.invoke(target, args);
   }
