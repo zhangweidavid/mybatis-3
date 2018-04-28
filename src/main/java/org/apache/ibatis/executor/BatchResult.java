@@ -28,7 +28,7 @@ public class BatchResult {
   private final MappedStatement mappedStatement;
   //sql
   private final String sql;
-  //参数列表
+  //参数列表,因为同一个MappedStatement在批处理中可能有多次执行，每次的参数对象是不同的
   private final List<Object> parameterObjects;
   //更新条数
   private int[] updateCounts;

@@ -47,6 +47,7 @@ public class BatchExecutor extends BaseExecutor {
   private final List<BatchResult> batchResultList = new ArrayList<BatchResult>();
   //最近一次创建的sql
   private String currentSql;
+  //最近一次添加批处理的MappedSatement
   private MappedStatement currentStatement;
 
   public BatchExecutor(Configuration configuration, Transaction transaction) {
@@ -59,26 +60,29 @@ public class BatchExecutor extends BaseExecutor {
     final Configuration configuration = ms.getConfiguration();
     //创建StatementHandler
     final StatementHandler handler = configuration.newStatementHandler(this, ms, parameterObject, RowBounds.DEFAULT, null, null);
-    //
+    //获取BoundSql
     final BoundSql boundSql = handler.getBoundSql();
-    //获取sql
+    //从boundSql中获取 sql
     final String sql = boundSql.getSql();
     final Statement stmt;
-    //如果sql等于当前sql同时MappedStatement等于当前的
+    //如果sql等于currentSql同时MappedStatement与currentStatement相同， 就是同一条SQL，但是参数可能不同，这样就不需要重复创建PrepareStatement
+    //可以减少网络交互次次数，通过源码可以发现批处理中最佳时间就是同样的sql要一起执行，不要存在不同sql间隔这样的场景出现
     if (sql.equals(currentSql) && ms.equals(currentStatement)) {
       int last = statementList.size() - 1;
-      //获取最后一次执行的statement
+      //获取最后一次创建statement
       stmt = statementList.get(last);
+      //设置事务超时时间
       applyTransactionTimeout(stmt);
-     handler.parameterize(stmt);//fix Issues 322
-      //获取最后一次执行结果
+      //设置stmt参数
+      handler.parameterize(stmt);
+      //获取对应的批量结果
       BatchResult batchResult = batchResultList.get(last);
-      //添加参数对象
+      //将参数对象添加到参数列表中
       batchResult.addParameterObject(parameterObject);
-    } else {//不存在同样sql
+    } else {//和上一次创建的SQL不同，则需要重新创建PrepareStatement
       Connection connection = getConnection(ms.getStatementLog());
       stmt = handler.prepare(connection, transaction.getTimeout());
-      handler.parameterize(stmt);    //fix Issues 322
+      handler.parameterize(stmt);
       currentSql = sql;
       currentStatement = ms;
       statementList.add(stmt);
@@ -86,6 +90,7 @@ public class BatchExecutor extends BaseExecutor {
     }
     //添加到批处理
     handler.batch(stmt);
+    //返回默认值
     return BATCH_UPDATE_RETURN_VALUE;
   }
 
@@ -131,12 +136,14 @@ public class BatchExecutor extends BaseExecutor {
       if (isRollback) {
         return Collections.emptyList();
       }
+      //遍历所有satement
       for (int i = 0, n = statementList.size(); i < n; i++) {
         Statement stmt = statementList.get(i);
         applyTransactionTimeout(stmt);
+        //获取对应的结果对象
         BatchResult batchResult = batchResultList.get(i);
         try {
-          //stmt.executeBatch执行批处理，并将更新条数保存到执行结果中
+          //stmt.executeBatch执行批处理，并将更新条数保存到执行结果中;
           batchResult.setUpdateCounts(stmt.executeBatch());
           //获取结果对应到mappedStatement
           MappedStatement ms = batchResult.getMappedStatement();
@@ -147,12 +154,12 @@ public class BatchExecutor extends BaseExecutor {
           if (Jdbc3KeyGenerator.class.equals(keyGenerator.getClass())) {
             Jdbc3KeyGenerator jdbc3KeyGenerator = (Jdbc3KeyGenerator) keyGenerator;
             jdbc3KeyGenerator.processBatch(ms, stmt, parameterObjects);
-          } else if (!NoKeyGenerator.class.equals(keyGenerator.getClass())) { //issue #141
-            for (Object parameter : parameterObjects) {
+          } else if (!NoKeyGenerator.class.equals(keyGenerator.getClass())) { //不是NoKeyGenerator，执行keyGenerator后置处理
+            for (Object parameter : parameterObjects) {//遍历所有参数对象
               keyGenerator.processAfter(this, ms, stmt, parameter);
             }
           }
-          // Close statement to close cursor #1109
+          //关闭statement
           closeStatement(stmt);
         } catch (BatchUpdateException e) {
           StringBuilder message = new StringBuilder();
