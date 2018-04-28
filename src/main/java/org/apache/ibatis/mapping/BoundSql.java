@@ -23,53 +23,55 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 import org.apache.ibatis.session.Configuration;
 
-/**
- * An actual SQL String got from an {@link SqlSource} after having processed any dynamic content.
- * The SQL may have SQL placeholders "?" and an list (ordered) of an parameter mappings 
- * with the additional information for each parameter (at least the property name of the input object to read 
- * the value from). 
- * </br>
- * Can also have additional parameters that are created by the dynamic language (for loops, bind...).
- *
- * @author Clinton Begin
- */
-public class BoundSql {
 
+public class BoundSql {
+  //真实的sql语句，可能存在占位符
   private final String sql;
+  //参数映射关系
   private final List<ParameterMapping> parameterMappings;
+  //参数对象
   private final Object parameterObject;
+  //附加参数
   private final Map<String, Object> additionalParameters;
+  //附加参数元数据
   private final MetaObject metaParameters;
 
   public BoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject) {
     this.sql = sql;
     this.parameterMappings = parameterMappings;
     this.parameterObject = parameterObject;
+    //初始化附加参数对象
     this.additionalParameters = new HashMap<String, Object>();
+    //创建HashMap的元数据
     this.metaParameters = configuration.newMetaObject(additionalParameters);
   }
 
+  //获取SQL
   public String getSql() {
     return sql;
   }
 
+  //获取参数映射关系
   public List<ParameterMapping> getParameterMappings() {
     return parameterMappings;
   }
 
+  //获取参数对象
   public Object getParameterObject() {
     return parameterObject;
   }
 
+  //判断附加参数中是否存在了该属性名对应的参数
   public boolean hasAdditionalParameter(String name) {
     String paramName = new PropertyTokenizer(name).getName();
     return additionalParameters.containsKey(paramName);
   }
 
+  //添加指定名称和值的附加参数
   public void setAdditionalParameter(String name, Object value) {
     metaParameters.setValue(name, value);
   }
-
+  //根据名称获取附加参数值
   public Object getAdditionalParameter(String name) {
     return metaParameters.getValue(name);
   }

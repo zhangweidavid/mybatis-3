@@ -39,6 +39,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
 
   private static final long serialVersionUID = -8855120656740914948L;
 
+  //对执行类型创建一个对象
   @Override
   public <T> T create(Class<T> type) {
     return create(type, null, null);
@@ -49,7 +50,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
     //接口类型处理，对特殊接口进行处理
     Class<?> classToCreate = resolveInterface(type);
-    // we know types are assignable
+    // 初始化对象
     return (T) instantiateClass(classToCreate, constructorArgTypes, constructorArgs);
   }
 
@@ -63,10 +64,12 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
       Constructor<T> constructor;
       //如果参数类型为null或参数为null,获取参数无参的构造器，构造对象
       if (constructorArgTypes == null || constructorArgs == null) {
+        //获取无参数构造器
         constructor = type.getDeclaredConstructor();
         if (!constructor.isAccessible()) {
           constructor.setAccessible(true);
         }
+        //通过构造器创建对象
         return constructor.newInstance();
       }
       //根据参数获取构造器，创建对象
@@ -76,6 +79,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
       }
       return constructor.newInstance(constructorArgs.toArray(new Object[constructorArgs.size()]));
     } catch (Exception e) {
+      //异常日志处理
       StringBuilder argTypes = new StringBuilder();
       if (constructorArgTypes != null && !constructorArgTypes.isEmpty()) {
         for (Class<?> argType : constructorArgTypes) {
@@ -114,6 +118,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     return classToCreate;
   }
 
+  //判断当前类型是否是集合类
   @Override
   public <T> boolean isCollection(Class<T> type) {
     return Collection.class.isAssignableFrom(type);

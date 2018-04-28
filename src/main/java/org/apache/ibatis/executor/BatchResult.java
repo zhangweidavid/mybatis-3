@@ -21,14 +21,16 @@ import java.util.List;
 import org.apache.ibatis.mapping.MappedStatement;
 
 /**
- * @author Jeff Butler
+ * 批量直接结果对象
  */
 public class BatchResult {
 
   private final MappedStatement mappedStatement;
+  //sql
   private final String sql;
+  //参数列表
   private final List<Object> parameterObjects;
-
+  //更新条数
   private int[] updateCounts;
 
   public BatchResult(MappedStatement mappedStatement, String sql) {

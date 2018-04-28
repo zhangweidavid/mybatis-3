@@ -43,7 +43,9 @@ public class BatchExecutor extends BaseExecutor {
   public static final int BATCH_UPDATE_RETURN_VALUE = Integer.MIN_VALUE + 1002;
 
   private final List<Statement> statementList = new ArrayList<Statement>();
+  //批量执行结果
   private final List<BatchResult> batchResultList = new ArrayList<BatchResult>();
+  //最近一次创建的sql
   private String currentSql;
   private MappedStatement currentStatement;
 
@@ -53,19 +55,27 @@ public class BatchExecutor extends BaseExecutor {
 
   @Override
   public int doUpdate(MappedStatement ms, Object parameterObject) throws SQLException {
+    //获取配置信息
     final Configuration configuration = ms.getConfiguration();
+    //创建StatementHandler
     final StatementHandler handler = configuration.newStatementHandler(this, ms, parameterObject, RowBounds.DEFAULT, null, null);
+    //
     final BoundSql boundSql = handler.getBoundSql();
+    //获取sql
     final String sql = boundSql.getSql();
     final Statement stmt;
+    //如果sql等于当前sql同时MappedStatement等于当前的
     if (sql.equals(currentSql) && ms.equals(currentStatement)) {
       int last = statementList.size() - 1;
+      //获取最后一次执行的statement
       stmt = statementList.get(last);
       applyTransactionTimeout(stmt);
      handler.parameterize(stmt);//fix Issues 322
+      //获取最后一次执行结果
       BatchResult batchResult = batchResultList.get(last);
+      //添加参数对象
       batchResult.addParameterObject(parameterObject);
-    } else {
+    } else {//不存在同样sql
       Connection connection = getConnection(ms.getStatementLog());
       stmt = handler.prepare(connection, transaction.getTimeout());
       handler.parameterize(stmt);    //fix Issues 322
@@ -74,7 +84,7 @@ public class BatchExecutor extends BaseExecutor {
       statementList.add(stmt);
       batchResultList.add(new BatchResult(ms, sql, parameterObject));
     }
-  // handler.parameterize(stmt);
+    //添加到批处理
     handler.batch(stmt);
     return BATCH_UPDATE_RETURN_VALUE;
   }
@@ -96,6 +106,7 @@ public class BatchExecutor extends BaseExecutor {
       stmt = handler.prepare(connection, transaction.getTimeout());
       //设置参数
       handler.parameterize(stmt);
+      //执行了SQL 也就是说查询是没有批处理的
       return handler.<E>query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
@@ -125,9 +136,13 @@ public class BatchExecutor extends BaseExecutor {
         applyTransactionTimeout(stmt);
         BatchResult batchResult = batchResultList.get(i);
         try {
+          //stmt.executeBatch执行批处理，并将更新条数保存到执行结果中
           batchResult.setUpdateCounts(stmt.executeBatch());
+          //获取结果对应到mappedStatement
           MappedStatement ms = batchResult.getMappedStatement();
+          //获取参数列表
           List<Object> parameterObjects = batchResult.getParameterObjects();
+          //获取key生成器
           KeyGenerator keyGenerator = ms.getKeyGenerator();
           if (Jdbc3KeyGenerator.class.equals(keyGenerator.getClass())) {
             Jdbc3KeyGenerator jdbc3KeyGenerator = (Jdbc3KeyGenerator) keyGenerator;

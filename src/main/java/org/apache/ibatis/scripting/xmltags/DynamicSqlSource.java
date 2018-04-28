@@ -23,11 +23,13 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.Configuration;
 
 /**
- * @author Clinton Begin
+ * 动态SqlSource
  */
 public class DynamicSqlSource implements SqlSource {
 
+  //配置数据
   private final Configuration configuration;
+  //动态SQL根节点
   private final SqlNode rootSqlNode;
 
   public DynamicSqlSource(Configuration configuration, SqlNode rootSqlNode) {
@@ -41,10 +43,15 @@ public class DynamicSqlSource implements SqlSource {
     DynamicContext context = new DynamicContext(configuration, parameterObject);
     //动态SQL处理
     rootSqlNode.apply(context);
+    //创建SqlSource构造器
     SqlSourceBuilder sqlSourceParser = new SqlSourceBuilder(configuration);
+    //获取参数类型
     Class<?> parameterType = parameterObject == null ? Object.class : parameterObject.getClass();
+     //创建SqlSource
     SqlSource sqlSource = sqlSourceParser.parse(context.getSql(), parameterType, context.getBindings());
+    //获取BoundSql
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
+    //将绑定数据添加到boundSql扩展参数中
     for (Map.Entry<String, Object> entry : context.getBindings().entrySet()) {
       boundSql.setAdditionalParameter(entry.getKey(), entry.getValue());
     }

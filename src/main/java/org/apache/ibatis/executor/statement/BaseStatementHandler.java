@@ -46,13 +46,17 @@ public abstract class BaseStatementHandler implements StatementHandler {
   protected final Configuration configuration;
   //对象工厂
   protected final ObjectFactory objectFactory;
-
+  //类型处理器注册器
   protected final TypeHandlerRegistry typeHandlerRegistry;
+  //结果处理器
   protected final ResultSetHandler resultSetHandler;
+  //参数处理器
   protected final ParameterHandler parameterHandler;
-
+  //执行器
   protected final Executor executor;
+
   protected final MappedStatement mappedStatement;
+
   protected final RowBounds rowBounds;
 
   protected BoundSql boundSql;
@@ -69,11 +73,12 @@ public abstract class BaseStatementHandler implements StatementHandler {
     //如果boundSql为null则需要先生成主键再生成boundSql
     if (boundSql == null) {
       generateKeys(parameterObject);
+      //
       boundSql = mappedStatement.getBoundSql(parameterObject);
     }
 
     this.boundSql = boundSql;
-
+    //通过配置创建parameterHandler以及resultSetHandler 之所以通过configuration创建是因为在这里可以听过插件进行增强ActivityGoodsGroupServiceImpl
     this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
     this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);
   }

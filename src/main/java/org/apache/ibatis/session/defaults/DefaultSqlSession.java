@@ -53,6 +53,7 @@ public class DefaultSqlSession implements SqlSession {
   private final Executor executor;
 
   private final boolean autoCommit;
+  //是否是脏数据
   private boolean dirty;
   private List<Cursor<?>> cursorList;
 
@@ -230,7 +231,9 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public void commit(boolean force) {
     try {
+      //根据条件是否强制提交
       executor.commit(isCommitOrRollbackRequired(force));
+      //提交后，重置dirty
       dirty = false;
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error committing transaction.  Cause: " + e, e);
@@ -321,7 +324,7 @@ public class DefaultSqlSession implements SqlSession {
     }
     cursorList.add(cursor);
   }
-
+  //是否必须提交或回滚，如果强制要求则返回true, 如果设置不自动提交但是有脏数据则返回true
   private boolean isCommitOrRollbackRequired(boolean force) {
     return (!autoCommit && dirty) || force;
   }

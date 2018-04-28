@@ -37,10 +37,13 @@ import org.apache.ibatis.transaction.Transaction;
 public class ManagedTransaction implements Transaction {
 
   private static final Log log = LogFactory.getLog(ManagedTransaction.class);
-
+  //数据源
   private DataSource dataSource;
+  //事务隔离级别
   private TransactionIsolationLevel level;
+  //连接
   private Connection connection;
+  //是否关闭连接
   private final boolean closeConnection;
 
   public ManagedTransaction(Connection connection, boolean closeConnection) {
@@ -56,6 +59,7 @@ public class ManagedTransaction implements Transaction {
 
   @Override
   public Connection getConnection() throws SQLException {
+    //如果当前连接为null则打开连接
     if (this.connection == null) {
       openConnection();
     }
@@ -86,7 +90,9 @@ public class ManagedTransaction implements Transaction {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
+    //从数据源中获取连接
     this.connection = this.dataSource.getConnection();
+    //如果配置了事务隔离级别则设置连接的事务隔离级别
     if (this.level != null) {
       this.connection.setTransactionIsolation(this.level.getLevel());
     }

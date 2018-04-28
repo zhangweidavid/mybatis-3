@@ -29,7 +29,7 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
 
 /**
- * @author Clinton Begin
+ * SqlSource建造器
  */
 public class SqlSourceBuilder extends BaseBuilder {
 
@@ -40,9 +40,13 @@ public class SqlSourceBuilder extends BaseBuilder {
   }
 
   public SqlSource parse(String originalSql, Class<?> parameterType, Map<String, Object> additionalParameters) {
+    //创建参数映射占位符处理器，该处理器到主要功能就是参数化处理
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
+    //创建通用占位符解析器
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
+    //解析原始SQL得到真实SQL
     String sql = parser.parse(originalSql);
+    //返回静态SqlSource
     return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
   }
 
@@ -74,6 +78,7 @@ public class SqlSourceBuilder extends BaseBuilder {
 
     //构建ParameterMapping
     private ParameterMapping buildParameterMapping(String content) {
+      //
       Map<String, String> propertiesMap = parseParameterMapping(content);
       String property = propertiesMap.get("property");
       Class<?> propertyType;

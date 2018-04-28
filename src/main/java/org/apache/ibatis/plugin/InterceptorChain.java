@@ -30,6 +30,7 @@ public class InterceptorChain {
 
     //对拦截器进行增强
     public Object pluginAll(Object target) {
+        //遍历所有拦截器，逐个增强
         for (Interceptor interceptor : interceptors) {
             target = interceptor.plugin(target);
         }
