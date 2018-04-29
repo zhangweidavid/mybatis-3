@@ -36,8 +36,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
- * @author Clinton Begin
- * @author Kazuki Shimizu
+ * jdbc3KeyGenerator没有实现前置处理，因为该该主要是用于取回数据库自增的主键
  */
 public class Jdbc3KeyGenerator implements KeyGenerator {
 
@@ -60,22 +59,32 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   public void processBatch(MappedStatement ms, Statement stmt, Collection<Object> parameters) {
     ResultSet rs = null;
     try {
+      //获取数据库自增的主键，如果没有生成主键则返回的结果集为空
       rs = stmt.getGeneratedKeys();
+      //获取配置数据
       final Configuration configuration = ms.getConfiguration();
+      //获取类型处理器的注册机
       final TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
+      //获取主键属性
       final String[] keyProperties = ms.getKeyProperties();
+      //获取结果集中的元数据
       final ResultSetMetaData rsmd = rs.getMetaData();
       TypeHandler<?>[] typeHandlers = null;
+      //如果指定了主键属性且返回的结果集中的列数大于或等于主键属性列的个数
       if (keyProperties != null && rsmd.getColumnCount() >= keyProperties.length) {
+        //遍历参数
         for (Object parameter : parameters) {
           // there should be one row for each statement (also one for each parameter)
           if (!rs.next()) {
             break;
           }
+          //获取参数的元数据
           final MetaObject metaParam = configuration.newMetaObject(parameter);
+          //获取属性的类型处理器
           if (typeHandlers == null) {
             typeHandlers = getTypeHandlers(typeHandlerRegistry, metaParam, keyProperties, rsmd);
           }
+          //生成主键属性值
           populateKeys(rs, metaParam, keyProperties, typeHandlers);
         }
       }
@@ -94,18 +103,20 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
 
   private Collection<Object> getParameters(Object parameter) {
     Collection<Object> parameters = null;
+    //如果属性是集合则返回集合
     if (parameter instanceof Collection) {
       parameters = (Collection) parameter;
-    } else if (parameter instanceof Map) {
+    } else if (parameter instanceof Map) {//参数对象是Map
       Map parameterMap = (Map) parameter;
-      if (parameterMap.containsKey("collection")) {
+      if (parameterMap.containsKey("collection")) {//如果map中有collection key
         parameters = (Collection) parameterMap.get("collection");
-      } else if (parameterMap.containsKey("list")) {
+      } else if (parameterMap.containsKey("list")) {//如果map中有list key
         parameters = (List) parameterMap.get("list");
-      } else if (parameterMap.containsKey("array")) {
+      } else if (parameterMap.containsKey("array")) {//如果map中有array key
         parameters = Arrays.asList((Object[]) parameterMap.get("array"));
       }
     }
+    //既不是集合也不是map,则创建一个List将参数对象添加到集合中
     if (parameters == null) {
       parameters = new ArrayList<Object>();
       parameters.add(parameter);
@@ -115,11 +126,15 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
 
   private TypeHandler<?>[] getTypeHandlers(TypeHandlerRegistry typeHandlerRegistry, MetaObject metaParam, String[] keyProperties, ResultSetMetaData rsmd) throws SQLException {
     TypeHandler<?>[] typeHandlers = new TypeHandler<?>[keyProperties.length];
+    //遍历所有主键列属性
     for (int i = 0; i < keyProperties.length; i++) {
+      //如果参数对象中有主键列的setter方法
       if (metaParam.hasSetter(keyProperties[i])) {
         TypeHandler<?> th;
         try {
+          //获取setter参数类型
           Class<?> keyPropertyType = metaParam.getSetterType(keyProperties[i]);
+          //获取参数类型的处理器
           th = typeHandlerRegistry.getTypeHandler(keyPropertyType, JdbcType.forCode(rsmd.getColumnType(i + 1)));
         } catch (BindingException e) {
           th = null;
@@ -131,11 +146,16 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   }
 
   private void populateKeys(ResultSet rs, MetaObject metaParam, String[] keyProperties, TypeHandler<?>[] typeHandlers) throws SQLException {
+    //遍历所有key属性
     for (int i = 0; i < keyProperties.length; i++) {
+      //key属性
       String property = keyProperties[i];
+      //获取类型处理器
       TypeHandler<?> th = typeHandlers[i];
       if (th != null) {
+        //获取主键值
         Object value = th.getResult(rs, i + 1);
+        //会写到参数对象中
         metaParam.setValue(property, value);
       }
     }
