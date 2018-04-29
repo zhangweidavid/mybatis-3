@@ -77,12 +77,13 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     enhancer.setSuperclass(type);
 
     try {
+      //获取writeReplace方法
       type.getDeclaredMethod(WRITE_REPLACE_METHOD);
-      // ObjectOutputStream will call writeReplace of objects returned by writeReplace
+      //如果一个对象有writeReplace则实际序列化对象是writeReplace的返回值
       if (log.isDebugEnabled()) {
         log.debug(WRITE_REPLACE_METHOD + " method was found on bean " + type + ", make sure it returns this");
       }
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException e) {//如果不存在则设置enhancer设置WriteReplaceInterface接口，为什么要实现该接口呢？可以通过后续代码寻找答案
       enhancer.setInterfaces(new Class[]{WriteReplaceInterface.class});
     } catch (SecurityException e) {
       // nothing to do here
@@ -91,12 +92,15 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     Object enhanced;
     Class<?>[] typesArray = constructorArgTypes.toArray(new Class[constructorArgTypes.size()]);
     Object[] valuesArray = constructorArgs.toArray(new Object[constructorArgs.size()]);
+    //创建了代理对象
     try {
       enhanced = enhancer.create(typesArray, valuesArray);
     } catch (Exception e) {
       throw new ExecutorException("Error creating lazy proxy.  Cause: " + e, e);
     }
+    //设置代理对象的增强
     ((Proxy) enhanced).setHandler(callback);
+    //返回代理对象
     return enhanced;
   }
 
@@ -106,8 +110,10 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
   private static class EnhancedResultObjectProxyImpl implements MethodHandler {
 
     private final Class<?> type;
+    //懒加载映射表
     private final ResultLoaderMap lazyLoader;
     private final boolean aggressive;
+    //懒加载触发方法
     private final Set<String> lazyLoadTriggerMethods;
     private final ObjectFactory objectFactory;
     private final List<Class<?>> constructorArgTypes;
@@ -152,20 +158,26 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
       final String methodName = method.getName();
       try {
         synchronized (lazyLoader) {
+          //如果当前调用是writeReplace 则表示需要对象当前对象进行序列化，而当前对象是一个代理对象，直接对当前对象序列化显然是不合理的
+          //在上面的代码可以发现代理对对象都存在writeReplace方法，在序列化的时候会调用该方法，在对该方法进行增强处理返回原始对象
           if (WRITE_REPLACE_METHOD.equals(methodName)) {
             Object original;
+            //创建一个新的原始对象
             if (constructorArgTypes.isEmpty()) {
               original = objectFactory.create(type);
             } else {
               original = objectFactory.create(type, constructorArgTypes, constructorArgs);
             }
+            //复制属性
             PropertyCopier.copyBeanProperties(type, enhanced, original);
+            //如果存在延迟加载对象则创建一个代理对象
             if (lazyLoader.size() > 0) {
               return new JavassistSerialStateHolder(original, lazyLoader.getProperties(), objectFactory, constructorArgTypes, constructorArgs);
-            } else {
+            } else {//如果没有延迟加载对象
               return original;
             }
-          } else {
+          } else {// 如果不是writeReplace方法
+            //如果懒加载对象大于0且当前不是finalize方法
             if (lazyLoader.size() > 0 && !FINALIZE_METHOD.equals(methodName)) {
               //如果是积极的懒加载模式或者调用列触发加载全部方法则加载全部懒加载属性
               if (aggressive || lazyLoadTriggerMethods.contains(methodName)) {
@@ -191,6 +203,9 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     }
   }
 
+  /**
+   * 反序列化增强
+   */
   private static class EnhancedDeserializationProxyImpl extends AbstractEnhancedDeserializationProxy implements MethodHandler {
 
     private EnhancedDeserializationProxyImpl(Class<?> type, Map<String, ResultLoaderMap.LoadPair> unloadedProperties, ObjectFactory objectFactory,

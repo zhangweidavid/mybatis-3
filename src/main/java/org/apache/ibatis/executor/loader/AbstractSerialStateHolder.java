@@ -36,16 +36,23 @@ import org.apache.ibatis.reflection.factory.ObjectFactory;
 /**
  * @author Eduardo Macarron
  * @author Franta Mejta
+ * 抽象序列化状态持有对象
  */
 public abstract class AbstractSerialStateHolder implements Externalizable {
 
   private static final long serialVersionUID = 8940388717901644661L;
   private static final ThreadLocal<ObjectOutputStream> stream = new ThreadLocal<ObjectOutputStream>();
+  //用户对象字节
   private byte[] userBeanBytes = new byte[0];
+  //用户对象
   private Object userBean;
+  //未加载属性
   private Map<String, ResultLoaderMap.LoadPair> unloadedProperties;
+  //对象工厂
   private ObjectFactory objectFactory;
+  //构造方法类型
   private Class<?>[] constructorArgTypes;
+  //构造参数
   private Object[] constructorArgs;
 
   public AbstractSerialStateHolder() {
@@ -74,14 +81,17 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
       firstRound = true;
       stream.set(os);
     }
-
+    //序列化userBean
     os.writeObject(this.userBean);
+    //序列化未加载属性
     os.writeObject(this.unloadedProperties);
+    //序列化对象工厂
     os.writeObject(this.objectFactory);
     os.writeObject(this.constructorArgTypes);
     os.writeObject(this.constructorArgs);
 
     final byte[] bytes = baos.toByteArray();
+    //完成序列化
     out.writeObject(bytes);
 
     if (firstRound) {
@@ -91,6 +101,7 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
 
   @Override
   public final void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+    //反序列化
     final Object data = in.readObject();
     if (data.getClass().isArray()) {
       this.userBeanBytes = (byte[]) data;
@@ -101,7 +112,7 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
 
   @SuppressWarnings("unchecked")
   protected final Object readResolve() throws ObjectStreamException {
-    /* Second run */
+    //如果userBean不为null且userBeanBytes长度为0则表示已经完成过 直接返回该对象
     if (this.userBean != null && this.userBeanBytes.length == 0) {
       return this.userBean;
     }
@@ -109,6 +120,7 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
     /* First run */
     try {
       final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(this.userBeanBytes));
+      //反序列化
       this.userBean = in.readObject();
       this.unloadedProperties = (Map<String, ResultLoaderMap.LoadPair>) in.readObject();
       this.objectFactory = (ObjectFactory) in.readObject();
@@ -123,7 +135,7 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
     final Map<String, ResultLoaderMap.LoadPair> arrayProps = new HashMap<String, ResultLoaderMap.LoadPair>(this.unloadedProperties);
     final List<Class<?>> arrayTypes = Arrays.asList(this.constructorArgTypes);
     final List<Object> arrayValues = Arrays.asList(this.constructorArgs);
-
+     //根据这些信息创建一个反序列化代理对象
     return this.createDeserializationProxy(userBean, arrayProps, objectFactory, arrayTypes, arrayValues);
   }
 

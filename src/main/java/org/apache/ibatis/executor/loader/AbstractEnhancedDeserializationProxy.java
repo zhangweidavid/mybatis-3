@@ -55,15 +55,18 @@ public abstract class AbstractEnhancedDeserializationProxy {
   public final Object invoke(Object enhanced, Method method, Object[] args) throws Throwable {
     final String methodName = method.getName();
     try {
+      //如果当前方法是writeReplace
       if (WRITE_REPLACE_METHOD.equals(methodName)) {
+        //创建原始对象
         final Object original;
         if (constructorArgTypes.isEmpty()) {
           original = objectFactory.create(type);
         } else {
           original = objectFactory.create(type, constructorArgTypes, constructorArgs);
         }
-
+        //复制属性值
         PropertyCopier.copyBeanProperties(type, enhanced, original);
+        //对原始对象AbstractSerialStateHolder对象，在对该对象序列化对时候实际上返回的是一个AbstractSerialStateHolder对象
         return this.newSerialStateHolder(original, unloadedProperties, objectFactory, constructorArgTypes, constructorArgs);
       } else {
         synchronized (this.reloadingPropertyLock) {

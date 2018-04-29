@@ -46,7 +46,7 @@ import org.apache.ibatis.session.RowBounds;
  * @author Franta Mejta
  */
 public class ResultLoaderMap {
-
+  //结果加载映射表
   private final Map<String, LoadPair> loaderMap = new HashMap<String, LoadPair>();
 
   public void addLoader(String property, MetaObject metaResultObject, ResultLoader resultLoader) {

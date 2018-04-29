@@ -124,7 +124,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     if (configuration.hasKeyGenerator(keyStatementId)) {
       keyGenerator = configuration.getKeyGenerator(keyStatementId);
     } else {
-      //将使用JDBC的getGeneratedKeys方法来获取主键的值。默认为false。
+      //判断是否配置了useGeneratedKeys,如果没有配置但是在configuration中配置了且当前是插入语句则使用jdbc3KeyGenerator 否则就是使用NoKeyGenerator
       keyGenerator = context.getBooleanAttribute("useGeneratedKeys",
           configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType))
           ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
