@@ -87,7 +87,9 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
     os.writeObject(this.unloadedProperties);
     //序列化对象工厂
     os.writeObject(this.objectFactory);
+    //序列化构造参数类型
     os.writeObject(this.constructorArgTypes);
+    //序列化构造参数
     os.writeObject(this.constructorArgs);
 
     final byte[] bytes = baos.toByteArray();
@@ -117,14 +119,18 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
       return this.userBean;
     }
 
-    /* First run */
+    /*第一次 */
     try {
       final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(this.userBeanBytes));
-      //反序列化
+      //反序列化userBean
       this.userBean = in.readObject();
+      //反序列化延迟加载属性
       this.unloadedProperties = (Map<String, ResultLoaderMap.LoadPair>) in.readObject();
+      //反序列化对象工厂
       this.objectFactory = (ObjectFactory) in.readObject();
+      //反序列化构造参数类型
       this.constructorArgTypes = (Class<?>[]) in.readObject();
+      //反序列化构造参数
       this.constructorArgs = (Object[]) in.readObject();
     } catch (final IOException ex) {
       throw (ObjectStreamException) new StreamCorruptedException().initCause(ex);
@@ -135,7 +141,7 @@ public abstract class AbstractSerialStateHolder implements Externalizable {
     final Map<String, ResultLoaderMap.LoadPair> arrayProps = new HashMap<String, ResultLoaderMap.LoadPair>(this.unloadedProperties);
     final List<Class<?>> arrayTypes = Arrays.asList(this.constructorArgTypes);
     final List<Object> arrayValues = Arrays.asList(this.constructorArgs);
-     //根据这些信息创建一个反序列化代理对象
+     //根据序列化是保存的数据创建一个反序列化代理对象
     return this.createDeserializationProxy(userBean, arrayProps, objectFactory, arrayTypes, arrayValues);
   }
 

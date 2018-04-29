@@ -149,6 +149,7 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
       final Class<?> type = target.getClass();
       EnhancedResultObjectProxyImpl callback = new EnhancedResultObjectProxyImpl(type, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
       Object enhanced = crateProxy(type, callback, constructorArgTypes, constructorArgs);
+      //复制属性
       PropertyCopier.copyBeanProperties(type, target, enhanced);
       return enhanced;
     }
@@ -159,7 +160,8 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
       try {
         synchronized (lazyLoader) {
           //如果当前调用是writeReplace 则表示需要对象当前对象进行序列化，而当前对象是一个代理对象，直接对当前对象序列化显然是不合理的
-          //在上面的代码可以发现代理对对象都存在writeReplace方法，在序列化的时候会调用该方法，在对该方法进行增强处理返回原始对象
+          //在上面的代码可以发现代理对对象都存在writeReplace方法，在序列化的时候会调用该方法，在对该方法进行增强处理返回原始对对象，如果需要延迟加载
+          //则返回了一个序列化状态保持对象
           if (WRITE_REPLACE_METHOD.equals(methodName)) {
             Object original;
             //创建一个新的原始对象
