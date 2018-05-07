@@ -25,11 +25,17 @@ import org.apache.ibatis.mapping.ResultMapping;
  * @author Eduardo Macarron
  */
 public class ResultMapResolver {
+  //
   private final MapperBuilderAssistant assistant;
+  //resultMap id
   private final String id;
+  //结果对象类型
   private final Class<?> type;
+  //继承
   private final String extend;
+  //鉴别器
   private final Discriminator discriminator;
+  //
   private final List<ResultMapping> resultMappings;
   private final Boolean autoMapping;
 

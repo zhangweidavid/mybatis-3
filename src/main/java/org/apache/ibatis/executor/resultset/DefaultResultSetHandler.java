@@ -1054,6 +1054,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       //如果嵌套ResultMapId不为null同时resultSet不为null
       if (nestedResultMapId != null && resultMapping.getResultSet() == null) {
         try {
+          System.out.print("-----------------"+nestedResultMapId);
           final String columnPrefix = getColumnPrefix(parentPrefix, resultMapping);
           //获取嵌套ResultMap
           final ResultMap nestedResultMap = getNestedResultMap(rsw.getResultSet(), nestedResultMapId, columnPrefix);

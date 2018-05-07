@@ -30,20 +30,34 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  */
 public class ResultMapping {
 
+  //配置数据
   private Configuration configuration;
+  //属性名称
   private String property;
+  //属性列
   private String column;
+  //java类型
   private Class<?> javaType;
+  //数据类型
   private JdbcType jdbcType;
+  //java类型处理器
   private TypeHandler<?> typeHandler;
+  //嵌套ResultMapID
   private String nestedResultMapId;
+  //嵌套查询ID
   private String nestedQueryId;
+  //非空列
   private Set<String> notNullColumns;
+  //列前缀
   private String columnPrefix;
+  //结果标签(构造参数，主键列)
   private List<ResultFlag> flags;
+  //合成ResultMapping
   private List<ResultMapping> composites;
   private String resultSet;
+  //外键列
   private String foreignColumn;
+  //是否懒加载
   private boolean lazy;
 
   ResultMapping() {
@@ -227,6 +241,7 @@ public class ResultMapping {
     return composites;
   }
 
+  //判断当前结果是不会合成ResultMap
   public boolean isCompositeResult() {
     return this.composites != null && !this.composites.isEmpty();
   }

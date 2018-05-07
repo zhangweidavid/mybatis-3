@@ -140,7 +140,7 @@ public class Configuration {
   //懒加载
   protected boolean lazyLoadingEnabled = false;
   //代理工厂
-  protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
+  protected ProxyFactory proxyFactory = new JavassistProxyFactory();
 
   protected String databaseId;
   /**

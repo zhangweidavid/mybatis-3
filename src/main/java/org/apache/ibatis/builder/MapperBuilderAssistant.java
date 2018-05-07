@@ -86,16 +86,18 @@ public class MapperBuilderAssistant extends BaseBuilder {
     if (base == null) {
       return null;
     }
+    //如果是引用
     if (isReference) {
-      // is it qualified with any namespace yet?
+      // 如果已经存在。表示已经存在namespace了直接返回
       if (base.contains(".")) {
         return base;
       }
     } else {
-      // is it qualified with this namespace yet?
+      // 如果已经存在当前namespace则直接返回
       if (base.startsWith(currentNamespace + ".")) {
         return base;
       }
+      //如果存在dot则抛出异常
       if (base.contains(".")) {
         throw new BuilderException("Dots are not allowed in element names, please remove it from " + base);
       }
@@ -378,12 +380,18 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String resultSet,
       String foreignColumn,
       boolean lazy) {
+    //
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
+    //类型处理器
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+    //解析混合列
     List<ResultMapping> composites = parseCompositeColumnName(column);
+    //构建ResultMapping
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
         .jdbcType(jdbcType)
+            //对嵌套查询ID进行namespace处理
         .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
+            //对嵌套ResultMap进行namespace处理
         .nestedResultMapId(applyCurrentNamespace(nestedResultMap, true))
         .resultSet(resultSet)
         .typeHandler(typeHandlerInstance)
@@ -414,11 +422,16 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
   private List<ResultMapping> parseCompositeColumnName(String columnName) {
     List<ResultMapping> composites = new ArrayList<ResultMapping>();
+    //如果columnName不为null 同时colunmnName中含有"=" 或者含有","号
     if (columnName != null && (columnName.indexOf('=') > -1 || columnName.indexOf(',') > -1)) {
+      //分割字符串
       StringTokenizer parser = new StringTokenizer(columnName, "{}=, ", false);
       while (parser.hasMoreTokens()) {
+        //获取属性
         String property = parser.nextToken();
+        //获取列
         String column = parser.nextToken();
+        //构建复合的ResultMapping
         ResultMapping complexResultMapping = new ResultMapping.Builder(
             configuration, property, column, configuration.getTypeHandlerRegistry().getUnknownTypeHandler()).build();
         composites.add(complexResultMapping);
