@@ -109,11 +109,16 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private final PrimitiveTypes primitiveTypes;
 
+  /**
+   * 待定关系对象
+   */
   private static class PendingRelation {
+    //对象元数据
     public MetaObject metaObject;
     public ResultMapping propertyMapping;
   }
 
+  //未映射到列自动映射关系
   private static class UnMappedColumnAutoMapping {
     private final String column;
     private final String property;
@@ -446,14 +451,15 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
     return rowValue;
   }
-
+   //是否需要自动映射
   private boolean shouldApplyAutomaticMappings(ResultMap resultMap, boolean isNested) {
+    //如果resultMap中配置了自动映射则返回配置到值
     if (resultMap.getAutoMapping() != null) {
       return resultMap.getAutoMapping();
-    } else {
-      if (isNested) {
+    } else {//如果没有配置
+      if (isNested) {//如果是嵌套，如果全局配置到自动映射行为是FUll则返回true
         return AutoMappingBehavior.FULL == configuration.getAutoMappingBehavior();
-      } else {
+      } else {// 如果不是嵌套则判断全局配置到是不是none，默认为PARTIAL
         return AutoMappingBehavior.NONE != configuration.getAutoMappingBehavior();
       }
     }
@@ -524,40 +530,56 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private List<UnMappedColumnAutoMapping> createAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
+    //创建缓存key
     final String mapKey = resultMap.getId() + ":" + columnPrefix;
+    //从自动映射缓存中获取数据
     List<UnMappedColumnAutoMapping> autoMapping = autoMappingsCache.get(mapKey);
+    //如果缓存中没有数据
     if (autoMapping == null) {
+      //则创建一个新到列表
       autoMapping = new ArrayList<UnMappedColumnAutoMapping>();
+      //获取未映射列列表
       final List<String> unmappedColumnNames = rsw.getUnmappedColumnNames(resultMap, columnPrefix);
+      //遍历所有未映射列
       for (String columnName : unmappedColumnNames) {
+        //将列名称赋值给属性名称
         String propertyName = columnName;
+        //如果存在列前缀
         if (columnPrefix != null && !columnPrefix.isEmpty()) {
-          // When columnPrefix is specified,
-          // ignore columns without the prefix.
+          //如果列名称是以列前缀开头则属性名为为去除前缀后到值
           if (columnName.toUpperCase(Locale.ENGLISH).startsWith(columnPrefix)) {
             propertyName = columnName.substring(columnPrefix.length());
-          } else {
+          } else { //如果列名称没有不是以指定前缀开头则忽略
             continue;
           }
         }
+        //根据指定名称从元数据中找到相应属性
         final String property = metaObject.findProperty(propertyName, configuration.isMapUnderscoreToCamelCase());
+        //如果属性存在且存在setter方法
         if (property != null && metaObject.hasSetter(property)) {
+          //如果该属性已经被映射过则忽略
           if (resultMap.getMappedProperties().contains(property)) {
             continue;
           }
+          //该属性没有被映射过
+          //获取该属性类型
           final Class<?> propertyType = metaObject.getSetterType(property);
+          //如果存在类型处理器
           if (typeHandlerRegistry.hasTypeHandler(propertyType, rsw.getJdbcType(columnName))) {
+            //获取类型处理器
             final TypeHandler<?> typeHandler = rsw.getTypeHandler(propertyType, columnName);
+            //创建UnMappedColumnAutoMapping对象并添加到autoMapping列表中
             autoMapping.add(new UnMappedColumnAutoMapping(columnName, property, typeHandler, propertyType.isPrimitive()));
-          } else {
+          } else {//如果没有类型处理器则使用全局配置到autoMappingUnknownColumnBehavior进行处理
             configuration.getAutoMappingUnknownColumnBehavior()
                 .doAction(mappedStatement, columnName, property, propertyType);
           }
-        } else {
+        } else {//如果属性不存在或这属性没有setter方法
           configuration.getAutoMappingUnknownColumnBehavior()
               .doAction(mappedStatement, columnName, (property != null) ? property : propertyName, null);
         }
       }
+      //将处理的autoMapping保存到缓存中
       autoMappingsCache.put(mapKey, autoMapping);
     }
     return autoMapping;

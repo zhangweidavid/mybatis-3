@@ -45,10 +45,13 @@ public class ResultSetWrapper {
   private final TypeHandlerRegistry typeHandlerRegistry;
   //列名
   private final List<String> columnNames = new ArrayList<String>();
+  //列的全类名
   private final List<String> classNames = new ArrayList<String>();
   private final List<JdbcType> jdbcTypes = new ArrayList<JdbcType>();
   private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<String, Map<Class<?>, TypeHandler<?>>>();
+  //映射到列
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<String, List<String>>();
+  //未映射到到列
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<String, List<String>>();
 
   public ResultSetWrapper(ResultSet rs, Configuration configuration) throws SQLException {
@@ -146,12 +149,18 @@ public class ResultSetWrapper {
   }
 
   private void loadMappedAndUnmappedColumnNames(ResultMap resultMap, String columnPrefix) throws SQLException {
+   //新建映射列和未映射列的集合
     List<String> mappedColumnNames = new ArrayList<String>();
     List<String> unmappedColumnNames = new ArrayList<String>();
+    //如果存在列前缀则将其转换未大写
     final String upperColumnPrefix = columnPrefix == null ? null : columnPrefix.toUpperCase(Locale.ENGLISH);
+    //预先进行前缀处理
     final Set<String> mappedColumns = prependPrefixes(resultMap.getMappedColumns(), upperColumnPrefix);
+    //遍历所有列
     for (String columnName : columnNames) {
+      //获取列名称大写
       final String upperColumnName = columnName.toUpperCase(Locale.ENGLISH);
+      //如果mappedColumns中存在则将其添加到已经映射列表中 否则将其添加到未映射列表中
       if (mappedColumns.contains(upperColumnName)) {
         mappedColumnNames.add(upperColumnName);
       } else {
