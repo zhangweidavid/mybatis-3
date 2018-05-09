@@ -235,12 +235,16 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void parameterMapElement(List<XNode> list) throws Exception {
+    //第一层循环遍历单前Mapper中配置的所有<ParameterMap>
     for (XNode parameterMapNode : list) {
+      //获取<parameterMap>上配置的属性
       String id = parameterMapNode.getStringAttribute("id");
       String type = parameterMapNode.getStringAttribute("type");
       Class<?> parameterClass = resolveClass(type);
+      //获取当前<parameterMap>下所有<parameter>
       List<XNode> parameterNodes = parameterMapNode.evalNodes("parameter");
       List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
+      //第二层循环遍历单前<ParameterMap>中配置的素有<parameter>
       for (XNode parameterNode : parameterNodes) {
         String property = parameterNode.getStringAttribute("property");
         String javaType = parameterNode.getStringAttribute("javaType");
@@ -254,6 +258,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         JdbcType jdbcTypeEnum = resolveJdbcType(jdbcType);
         @SuppressWarnings("unchecked")
         Class<? extends TypeHandler<?>> typeHandlerClass = (Class<? extends TypeHandler<?>>) resolveClass(typeHandler);
+        //构建ParameterMapping
         ParameterMapping parameterMapping = builderAssistant.buildParameterMapping(parameterClass, property, javaTypeClass, jdbcTypeEnum, resultMap, modeEnum, typeHandlerClass, numericScale);
         parameterMappings.add(parameterMapping);
       }
@@ -262,6 +267,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void resultMapElements(List<XNode> list) throws Exception {
+    //遍历当前 Mapper中配置的素有resultMap
     for (XNode resultMapNode : list) {
       try {
         resultMapElement(resultMapNode);
