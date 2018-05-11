@@ -133,7 +133,7 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
-    //获取BoundSql
+    //获取BoundSql，此时完成了sql都参数化，将参数都更换为?
     BoundSql boundSql = ms.getBoundSql(parameter);
     //创建缓存key
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);

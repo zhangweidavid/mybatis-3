@@ -43,7 +43,9 @@ public class ParameterExpression extends HashMap<String, String> {
   private void parse(String expression) {
     //跳过无效字符
     int p = skipWS(expression, 0);
+    //如果p位置都字符是(
     if (expression.charAt(p) == '(') {
+      //开始位置为p+1,忽略（
       expression(expression, p + 1);
     } else {
       property(expression, p);
@@ -54,6 +56,7 @@ public class ParameterExpression extends HashMap<String, String> {
     int match = 1;
     int right = left + 1;
     while (match > 0) {
+      //如果right位置为)
       if (expression.charAt(right) == ')') {
         match--;
       } else if (expression.charAt(right) == '(') {
@@ -61,12 +64,15 @@ public class ParameterExpression extends HashMap<String, String> {
       }
       right++;
     }
+    //找到合适的表但是
     put("expression", expression.substring(left, right - 1));
     jdbcTypeOpt(expression, right);
   }
 
   private void property(String expression, int left) {
+    //如果开始索引小于表达式长度
     if (left < expression.length()) {
+      //找到最右侧值
       int right = skipUntil(expression, left, ",:");
       put("property", trimmedStr(expression, left, right));
       jdbcTypeOpt(expression, right);

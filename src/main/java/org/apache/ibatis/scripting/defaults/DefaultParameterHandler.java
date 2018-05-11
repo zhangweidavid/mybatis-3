@@ -47,7 +47,9 @@ public class DefaultParameterHandler implements ParameterHandler {
   private final MappedStatement mappedStatement;
   //参数对象
   private final Object parameterObject;
+  //boundSql
   private final BoundSql boundSql;
+  //全局配置信息
   private final Configuration configuration;
 
   public DefaultParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
@@ -80,14 +82,14 @@ public class DefaultParameterHandler implements ParameterHandler {
           Object value;
           //获取参数名称
           String propertyName = parameterMapping.getProperty();
-          //获取参数值
-          if (boundSql.hasAdditionalParameter(propertyName)) { // issue #448 ask first for additional params
+          //如果扩展参数存在存在该存在，则从扩展参数中获取属性值
+          if (boundSql.hasAdditionalParameter(propertyName)) {
             value = boundSql.getAdditionalParameter(propertyName);
-          } else if (parameterObject == null) {
+          } else if (parameterObject == null) {//如果扩展参数中没有，且参数对象为null则值为null
             value = null;
-          } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
+          } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {//如果当前参数对象类型有类型处理器值值就是当前对象
             value = parameterObject;
-          } else {
+          } else {//不存在扩展参数也不为null而且没有类型处理器则通过MetaObject方式获取属性值
             MetaObject metaObject = configuration.newMetaObject(parameterObject);
             value = metaObject.getValue(propertyName);
           }

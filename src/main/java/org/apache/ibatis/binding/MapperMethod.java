@@ -149,8 +149,11 @@ public class MapperMethod {
 
   private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
     List<E> result;
+    //构建请求参数对象
     Object param = method.convertArgsToSqlCommandParam(args);
+    //如果存在rowBounds
     if (method.hasRowBounds()) {
+      //从请求参数中获取rowBounds
       RowBounds rowBounds = method.extractRowBounds(args);
       result = sqlSession.<E>selectList(command.getName(), param, rowBounds);
     } else {
@@ -158,6 +161,7 @@ public class MapperMethod {
     }
     // issue #510 Collections & arrays support
     if (!method.getReturnType().isAssignableFrom(result.getClass())) {
+      //如果返回类型是数组
       if (method.getReturnType().isArray()) {
         return convertToArray(result);
       } else {
@@ -180,8 +184,11 @@ public class MapperMethod {
   }
 
   private <E> Object convertToDeclaredCollection(Configuration config, List<E> list) {
+    //通过对象工厂创建对象
     Object collection = config.getObjectFactory().create(method.getReturnType());
+    //获取对象的MetaObject
     MetaObject metaObject = config.newMetaObject(collection);
+    //添加数据
     metaObject.addAll(list);
     return collection;
   }

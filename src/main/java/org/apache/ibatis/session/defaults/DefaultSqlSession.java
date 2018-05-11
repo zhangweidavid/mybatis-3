@@ -49,12 +49,13 @@ import org.apache.ibatis.session.SqlSession;
 public class DefaultSqlSession implements SqlSession {
 
   private final Configuration configuration;
-  //
+  //执行器
   private final Executor executor;
-
+  //是否自动提交
   private final boolean autoCommit;
-  //是否是脏数据
+  //是否是脏数据,在update时将该值设置为true在commit时将该值设置为false  默认值为false
   private boolean dirty;
+
   private List<Cursor<?>> cursorList;
 
   public DefaultSqlSession(Configuration configuration, Executor executor, boolean autoCommit) {
@@ -154,7 +155,7 @@ public class DefaultSqlSession implements SqlSession {
     try {
       //根据ID查询到MappedStatement
       MappedStatement ms = configuration.getMappedStatement(statement);
-      //执行SQL
+      //在该层对请求参数进行了一次封装，如果是collection,list,array都封装为StrictMap
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);

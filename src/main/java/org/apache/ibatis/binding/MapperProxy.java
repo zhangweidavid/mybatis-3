@@ -28,7 +28,7 @@ import org.apache.ibatis.reflection.ExceptionUtil;
 import org.apache.ibatis.session.SqlSession;
 
 /**
- * Mapper代理调用处理器
+ * Mapper代理对象，实际上还是通过SqlSession完成调用
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -50,6 +50,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
+      //如果method是proxy中声明的方法
       if (Object.class.equals(method.getDeclaringClass())) {
         return method.invoke(this, args);
       } else if (isDefaultMethod(method)) {
@@ -65,11 +66,16 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   }
 
   private MapperMethod cachedMapperMethod(Method method) {
+    //从缓存中获取
     MapperMethod mapperMethod = methodCache.get(method);
+    // 如果缓存中没有
     if (mapperMethod == null) {
+      //创建新的MapperMethod
       mapperMethod = new MapperMethod(mapperInterface, method, sqlSession.getConfiguration());
+      //存入缓存
       methodCache.put(method, mapperMethod);
     }
+    //返回数据
     return mapperMethod;
   }
 
@@ -90,7 +96,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   }
 
   /**
-   * Backport of java.lang.reflect.Method#isDefault()
+   * 反向移植 java.lang.reflect.Method#isDefault()
    */
   private boolean isDefaultMethod(Method method) {
     return (method.getModifiers()

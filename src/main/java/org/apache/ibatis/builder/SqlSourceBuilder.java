@@ -78,7 +78,7 @@ public class SqlSourceBuilder extends BaseBuilder {
 
     //构建ParameterMapping
     private ParameterMapping buildParameterMapping(String content) {
-      //
+      //content为参数名称
       Map<String, String> propertiesMap = parseParameterMapping(content);
       String property = propertiesMap.get("property");
       Class<?> propertyType;
